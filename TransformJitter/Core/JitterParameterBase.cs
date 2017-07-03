@@ -91,5 +91,15 @@ namespace MYB.TransformJitter
             preMaxOffset = offset.max;
             preMinOffset = offset.min;
         }
+
+        public void Copy(JitterParameterBase input)
+        {
+            period.Copy(input.period);
+            interval.Copy(input.interval);
+            amplitude.Copy(input.amplitude);
+            offset.Copy(input.offset);
+            blendNextPeriod = input.blendNextPeriod;
+            blendNextAmplitude = input.blendNextAmplitude;
+        }
     }
 }

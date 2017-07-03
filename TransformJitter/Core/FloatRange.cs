@@ -40,6 +40,12 @@ namespace MYB.TransformJitter
             this.clampMax = clampMax;
         }
 
+        public void Copy(FloatRange input)
+        {
+            min = input.min;
+            max = input.max;
+        }
+
 #if UNITY_EDITOR
         [CustomPropertyDrawer(typeof(FloatRange))]
         public class FloatRangeDrawer : PropertyDrawer

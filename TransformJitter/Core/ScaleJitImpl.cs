@@ -123,7 +123,7 @@ namespace MYB.TransformJitter
             if (isChild) return;
             if (!isProcessing) return;
 
-            SetUserRotation();
+            SetTransform();
         }
 
         //Editor変更時
@@ -137,6 +137,15 @@ namespace MYB.TransformJitter
                 onceParameter[i].syncAxis = syncAxis;
             }
 
+            if (syncAxis)
+            {
+                for (int i = 1; i < 3; i++)
+                {
+                    loopParameter[i].Copy(loopParameter[0]);
+                    onceParameter[i].Copy(onceParameter[0]);
+                }
+            }
+
             foreach (JitterParameter param in loopParameter)
                 param.AdjustParameter();
         }
@@ -146,7 +155,7 @@ namespace MYB.TransformJitter
         {
             isChild = false;
             
-            //target階層下から、同Boneを操作対象としたBoneJitter(親)が存在するか確認
+            //target階層下から、同targetを操作対象としたScaleJitter(親)が存在するか確認
             int parent = target.GetComponentsInChildren<ScaleJitter>()
                                         .Where(x => x.target == this.target)
                                         .Where(x => x.isChild == false)
@@ -179,8 +188,8 @@ namespace MYB.TransformJitter
                 h.ResetOnceState();
         }
 
-        //EulerAngle集計 & セット
-        protected void SetUserRotation()
+        //集計 & セット
+        protected void SetTransform()
         {
             Vector3 vec = GetCurrentWeight();
 
