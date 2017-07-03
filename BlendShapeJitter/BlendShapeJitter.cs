@@ -7,7 +7,8 @@ using UnityEditorInternal;
 namespace MYB.BlendShapeJitter
 {
     /// <summary>
-    /// MMD4Mecanim ModelのmorphWeightを任意の波形で振幅させます。
+    /// SkinnedMeshRendererのBlendShapeを任意の波形で振幅させます。
+    /// SkinnedMeshRendererコンポーネントからBlendShapesの値を変更し、Setを押すことで振幅させるモーフを設定出来ます。
     /// PlayOnce()を実行することで、Onceの波形を任意のタイミングでLoopの波形に加算出来ます。
     /// </summary>
     public class BlendShapeJitter : JitterImpl

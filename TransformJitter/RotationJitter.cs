@@ -9,9 +9,6 @@ namespace MYB.TransformJitter
     /// <summary>
     /// TransformのRotationのX,Y,Zそれぞれを任意の波形で振幅させます。
     /// PlayOnce()を実行することで、Onceの波形を任意のタイミングでLoopの波形に加算出来ます。
-    /// 同一Boneに対して複数のイベントを設定したい場合(首を仰ぐ、俯く等)、
-    /// 対象とするBoneの階層下に複数アタッチすることで、親(isChild = false)が自動で設定されます。
-    /// 親のUpdateにてRotationの更新が行われます。
     /// </summary>
     public class RotationJitter : RotationJitImpl
     {
