@@ -11,6 +11,7 @@ namespace MYB.TransformJitter
     public class ScaleJitImpl : MonoBehaviour
     {
         public Transform target;
+        public UpdateMode updateMode = UpdateMode.Reference;
         public Vector3 referenceScale;
         public bool syncAxis = false;
         public bool overrideOnce;
@@ -31,8 +32,7 @@ namespace MYB.TransformJitter
             new JitterParameter(PrimitiveAnimationCurve.UpDown25, false),
             new JitterParameter(PrimitiveAnimationCurve.UpDown25, false)
         };
-
-        protected Animator anim;
+        
         protected Vector2 amplitudeMagnification = Vector2.one;    //振幅倍率 x:Loop y:Once
         protected List<Coroutine> loopRoutineList = new List<Coroutine>();
         protected List<Coroutine> onceRoutineList = new List<Coroutine>();
@@ -98,9 +98,7 @@ namespace MYB.TransformJitter
         void Awake()
         {
             if (target == null) return;
-
-            anim = GetComponentInParent<Animator>();
-
+           
             if (!isChild)
             {
                 referenceScale = target.localScale;
@@ -123,7 +121,7 @@ namespace MYB.TransformJitter
             if (isChild) return;
             if (!isProcessing) return;
 
-            SetTransform();
+            SetScale();
         }
 
         //Editor変更時
@@ -189,7 +187,7 @@ namespace MYB.TransformJitter
         }
 
         //集計 & セット
-        protected void SetTransform()
+        protected void SetScale()
         {
             Vector3 vec = GetCurrentWeight();
 
@@ -198,20 +196,18 @@ namespace MYB.TransformJitter
 
             vec *= magnification;
 
-            target.localScale = referenceScale + vec;
-            /*
-            if (anim != null)
+            switch (updateMode)
             {
-                if (anim.runtimeAnimatorController == null)
+                case UpdateMode.Override:
+                    target.localScale = vec;
+                    break;
+                case UpdateMode.Reference:
                     target.localScale = referenceScale + vec;
-                else
-                    target.localScale = referenceScale + vec;
+                    break;
+                case UpdateMode.AfterAnimation:
+                    target.localScale += vec;
+                    break;
             }
-            else
-            {
-                target.localScale = referenceScale + vec;
-            }
-            */
         }
 
         protected void ResetScale()

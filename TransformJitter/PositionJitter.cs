@@ -182,6 +182,7 @@ namespace MYB.TransformJitter
         [CustomEditor(typeof(PositionJitter))]
         public class PositionJitterEditor : Editor
         {
+            SerializedProperty updateModeProperty;
             SerializedProperty referencePositionProperty;
             SerializedProperty syncAxisProperty;
             SerializedProperty overrideOnceProperty;
@@ -194,6 +195,7 @@ namespace MYB.TransformJitter
             {
                 var self = target as PositionJitter;
 
+                updateModeProperty = serializedObject.FindProperty("updateMode");
                 referencePositionProperty = serializedObject.FindProperty("referencePosition");
                 syncAxisProperty = serializedObject.FindProperty("syncAxis");
                 overrideOnceProperty = serializedObject.FindProperty("overrideOnce");
@@ -241,7 +243,13 @@ namespace MYB.TransformJitter
                 }
                 EditorGUI.EndDisabledGroup();
 
-                if (!self.isChild)
+                //UpdateMode
+                var updateMode = (UpdateMode)updateModeProperty.enumValueIndex;
+                updateModeProperty.enumValueIndex = (int)(UpdateMode)EditorGUILayout.EnumPopup(
+                    updateModeProperty.displayName, (System.Enum)updateMode);
+
+                //Reference
+                if (!self.isChild && updateMode == UpdateMode.Reference)
                     referencePositionProperty.vector3Value = EditorGUILayout.Vector3Field(referencePositionProperty.displayName, referencePositionProperty.vector3Value);
 
                 //sync Axis

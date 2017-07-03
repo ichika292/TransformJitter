@@ -11,6 +11,7 @@ namespace MYB.TransformJitter
     public class RotationJitImpl : MonoBehaviour
     {
         public Transform target;
+        public UpdateMode updateMode = UpdateMode.Reference;
         public Vector3 referenceRotation;
         public bool syncAxis = false;
         public bool overrideOnce;
@@ -32,8 +33,7 @@ namespace MYB.TransformJitter
             new JitterParameter(PrimitiveAnimationCurve.UpDown25, false),
             new JitterParameter(PrimitiveAnimationCurve.UpDown25, false)
         };
-
-        protected Animator anim;
+        
         protected Vector2 amplitudeMagnification = Vector2.one;    //振幅倍率 x:Loop y:Once
         protected List<Coroutine> loopRoutineList = new List<Coroutine>();
         protected List<Coroutine> onceRoutineList = new List<Coroutine>();
@@ -99,9 +99,7 @@ namespace MYB.TransformJitter
         void Awake()
         {
             if (target == null) return;
-
-            anim = GetComponentInParent<Animator>();
-            
+                        
             if (!isChild)
             {
                 referenceRotation = target.localRotation.eulerAngles;
@@ -124,7 +122,7 @@ namespace MYB.TransformJitter
             if (isChild) return;
             if (!isProcessing) return;
 
-            SetTransform();
+            SetRotation();
         }
 
         //Editor変更時
@@ -190,7 +188,7 @@ namespace MYB.TransformJitter
         }
 
         //集計 & セット
-        protected void SetTransform()
+        protected void SetRotation()
         {
             Vector3 vec = GetCurrentWeight();
 
@@ -198,17 +196,18 @@ namespace MYB.TransformJitter
                 vec += child.GetCurrentWeight();
 
             var rot = Quaternion.Euler(vec * magnification);
-            
-            if(anim != null)
+
+            switch (updateMode)
             {
-                if (anim.runtimeAnimatorController == null)
+                case UpdateMode.Override:
+                    target.localRotation = rot;
+                    break;
+                case UpdateMode.Reference:
                     target.localRotation = Quaternion.Euler(referenceRotation) * rot;
-                else
+                    break;
+                case UpdateMode.AfterAnimation:
                     target.localRotation *= rot;
-            }
-            else
-            {
-                target.localRotation = Quaternion.Euler(referenceRotation) * rot;
+                    break;
             }
         }
 

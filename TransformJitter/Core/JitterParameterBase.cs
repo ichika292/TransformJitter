@@ -3,6 +3,16 @@
 namespace MYB.TransformJitter
 {
     /// <summary>
+    /// Transformの更新方法
+    /// </summary>
+    public enum UpdateMode
+    {
+        Override,
+        Reference,
+        AfterAnimation,
+    }
+
+    /// <summary>
     /// 波形生成用のプロパティ(再生中に変動しない)
     /// ループ用と外部入力用の2つインスタンス化される。
     /// </summary>

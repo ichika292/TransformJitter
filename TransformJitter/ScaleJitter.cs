@@ -182,6 +182,7 @@ namespace MYB.TransformJitter
         [CustomEditor(typeof(ScaleJitter))]
         public class ScaleJitterEditor : Editor
         {
+            SerializedProperty updateModeProperty;
             SerializedProperty referenceScaleProperty;
             SerializedProperty syncAxisProperty;
             SerializedProperty overrideOnceProperty;
@@ -194,6 +195,7 @@ namespace MYB.TransformJitter
             {
                 var self = target as ScaleJitter;
 
+                updateModeProperty = serializedObject.FindProperty("updateMode");
                 referenceScaleProperty = serializedObject.FindProperty("referenceScale");
                 syncAxisProperty = serializedObject.FindProperty("syncAxis");
                 overrideOnceProperty = serializedObject.FindProperty("overrideOnce");
@@ -241,7 +243,13 @@ namespace MYB.TransformJitter
                 }
                 EditorGUI.EndDisabledGroup();
 
-                if (!self.isChild)
+                //UpdateMode
+                var updateMode = (UpdateMode)updateModeProperty.enumValueIndex;
+                updateModeProperty.enumValueIndex = (int)(UpdateMode)EditorGUILayout.EnumPopup(
+                    updateModeProperty.displayName, (System.Enum)updateMode);
+
+                //Reference
+                if (!self.isChild && updateMode == UpdateMode.Reference)
                     referenceScaleProperty.vector3Value = EditorGUILayout.Vector3Field(referenceScaleProperty.displayName, referenceScaleProperty.vector3Value);
 
                 //sync Axis

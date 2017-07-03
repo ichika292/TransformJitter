@@ -11,6 +11,7 @@ namespace MYB.TransformJitter
     public class PositionJitImpl : MonoBehaviour
     {
         public Transform target;
+        public UpdateMode updateMode = UpdateMode.Reference;
         public Vector3 referencePosition;
         public bool syncAxis = false;
         public bool overrideOnce;
@@ -31,8 +32,7 @@ namespace MYB.TransformJitter
             new JitterParameter(PrimitiveAnimationCurve.UpDown25, false),
             new JitterParameter(PrimitiveAnimationCurve.UpDown25, false)
         };
-
-        protected Animator anim;
+        
         protected Vector2 amplitudeMagnification = Vector2.one;    //振幅倍率 x:Loop y:Once
         protected List<Coroutine> loopRoutineList = new List<Coroutine>();
         protected List<Coroutine> onceRoutineList = new List<Coroutine>();
@@ -98,9 +98,7 @@ namespace MYB.TransformJitter
         void Awake()
         {
             if (target == null) return;
-
-            anim = GetComponentInParent<Animator>();
-
+            
             if (!isChild)
             {
                 referencePosition = target.localPosition;
@@ -123,7 +121,7 @@ namespace MYB.TransformJitter
             if (isChild) return;
             if (!isProcessing) return;
 
-            SetTransform();
+            SetPosition();
         }
 
         //Editor変更時
@@ -189,7 +187,7 @@ namespace MYB.TransformJitter
         }
 
         //集計 & セット
-        protected void SetTransform()
+        protected void SetPosition()
         {
             Vector3 vec = GetCurrentWeight();
 
@@ -198,16 +196,17 @@ namespace MYB.TransformJitter
 
             vec *= magnification;
 
-            if (anim != null)
+            switch (updateMode)
             {
-                if (anim.runtimeAnimatorController == null)
+                case UpdateMode.Override:
+                    target.localPosition = vec;
+                    break;
+                case UpdateMode.Reference:
                     target.localPosition = referencePosition + vec;
-                else
+                    break;
+                case UpdateMode.AfterAnimation:
                     target.localPosition += vec;
-            }
-            else
-            {
-                target.localPosition = referencePosition + vec;
+                    break;
             }
         }
 

@@ -182,6 +182,7 @@ namespace MYB.TransformJitter
         [CustomEditor(typeof(RotationJitter))]
         public class RotationJitterEditor : Editor
         {
+            SerializedProperty updateModeProperty;
             SerializedProperty referenceRotationProperty;
             SerializedProperty syncAxisProperty;
             SerializedProperty overrideOnceProperty;
@@ -194,6 +195,7 @@ namespace MYB.TransformJitter
             {
                 var self = target as RotationJitter;
 
+                updateModeProperty = serializedObject.FindProperty("updateMode");
                 referenceRotationProperty = serializedObject.FindProperty("referenceRotation");
                 syncAxisProperty = serializedObject.FindProperty("syncAxis");
                 overrideOnceProperty = serializedObject.FindProperty("overrideOnce");
@@ -241,7 +243,13 @@ namespace MYB.TransformJitter
                 }
                 EditorGUI.EndDisabledGroup();
 
-                if(!self.isChild)
+                //UpdateMode
+                var updateMode = (UpdateMode)updateModeProperty.enumValueIndex;
+                updateModeProperty.enumValueIndex = (int)(UpdateMode)EditorGUILayout.EnumPopup(
+                    updateModeProperty.displayName, (System.Enum)updateMode);
+
+                //Reference
+                if (!self.isChild && updateMode == UpdateMode.Reference)
                     referenceRotationProperty.vector3Value = EditorGUILayout.Vector3Field(referenceRotationProperty.displayName, referenceRotationProperty.vector3Value);
 
                 //sync Axis
