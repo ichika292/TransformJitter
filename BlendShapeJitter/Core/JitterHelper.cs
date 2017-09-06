@@ -27,6 +27,7 @@ namespace MYB.BlendShapeJitter
             public float nextAmplitude;
             public float curOffset;     //morphWeight下限
             public float nextOffset;
+            public int currentKeyframeIndex;    //AnimationCurveの現在再生中の(Timerに対応する)Keyframeのindex
 
             public State(JitterParameter _param)
             {
@@ -66,11 +67,25 @@ namespace MYB.BlendShapeJitter
             public float GetCurrentWeight()
             {
                 if (curPeriod <= 0f) return curOffset;
-
+                
                 float timer01 = Mathf.Clamp01(timer);
+                float value = param.periodToAmplitude.Evaluate(timer01);
+                var keys = param.periodToAmplitude.keys;
+                int length = keys.Length;
+                for (int i = currentKeyframeIndex; i < length; i++)
+                {
+                    if (timer > keys[i].time)
+                    {
+                        value = keys[i].value;
+                        currentKeyframeIndex = i + 1;
+                        if (currentKeyframeIndex >= length)
+                            currentKeyframeIndex = 0;
+                    }
+                }
+
                 float amp = CalcBlendState(curAmplitude, nextAmplitude, timer01, param.blendNextAmplitude);
                 float ofs = CalcBlendState(curOffset, nextOffset, timer01, param.blendNextAmplitude);
-                float weight = Mathf.Clamp01(param.periodToAmplitude.Evaluate(timer01) * amp + ofs);
+                float weight = Mathf.Clamp01(value * amp + ofs);
                 return weight * param.magnification;
             }
 

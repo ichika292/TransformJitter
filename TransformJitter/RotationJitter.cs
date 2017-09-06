@@ -190,8 +190,6 @@ namespace MYB.TransformJitter
 
             void OnEnable()
             {
-                var self = target as RotationJitter;
-
                 updateModeProperty = serializedObject.FindProperty("updateMode");
                 referenceRotationProperty = serializedObject.FindProperty("referenceRotation");
                 syncAxisProperty = serializedObject.FindProperty("syncAxis");

@@ -184,20 +184,16 @@ namespace MYB.TransformJitter
             SerializedProperty syncAxisProperty;
             SerializedProperty overrideOnceProperty;
             SerializedProperty magnificationProperty;
-            SerializedProperty maxDegreesDeltaProperty;
             SerializedProperty loopParameterProperty;
             SerializedProperty onceParameterProperty;
 
             void OnEnable()
             {
-                var self = target as PositionJitter;
-
                 updateModeProperty = serializedObject.FindProperty("updateMode");
                 referencePositionProperty = serializedObject.FindProperty("referencePosition");
                 syncAxisProperty = serializedObject.FindProperty("syncAxis");
                 overrideOnceProperty = serializedObject.FindProperty("overrideOnce");
                 magnificationProperty = serializedObject.FindProperty("magnification");
-                maxDegreesDeltaProperty = serializedObject.FindProperty("maxDegreesDelta");
                 loopParameterProperty = serializedObject.FindProperty("loopParameter");
                 onceParameterProperty = serializedObject.FindProperty("onceParameter");
             }
