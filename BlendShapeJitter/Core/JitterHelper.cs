@@ -81,6 +81,10 @@ namespace MYB.BlendShapeJitter
                         if (currentKeyframeIndex >= length)
                             currentKeyframeIndex = 0;
                     }
+                    else
+                    {
+                        break;
+                    }
                 }
 
                 float amp = CalcBlendState(curAmplitude, nextAmplitude, timer01, param.blendNextAmplitude);
