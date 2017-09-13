@@ -48,6 +48,7 @@ namespace MYB.TransformJitter
                     rot = Quaternion.RotateTowards(leftEye.rotation, rot, maxDegreesDelta);
                     leftEye.rotation = rot;
                     rightEye.rotation = rot;
+                    prevRotation = rot;
                 }
             }
 
