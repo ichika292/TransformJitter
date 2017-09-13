@@ -52,7 +52,6 @@ namespace MYB.BlendShapeJitter
                 bool loop = property.FindPropertyRelative("loop").boolValue;
 
                 //各プロパティー取得
-                var curveProperty = property.FindPropertyRelative("periodToAmplitude");
                 var periodProperty = property.FindPropertyRelative("period");
                 var intervalProperty = property.FindPropertyRelative("interval");
                 var amplitudeProperty = property.FindPropertyRelative("amplitude");
@@ -61,14 +60,7 @@ namespace MYB.BlendShapeJitter
                 var blendNextAmplitudeProperty = property.FindPropertyRelative("blendNextAmplitude");
 
                 position.height = EditorGUIUtility.singleLineHeight;
-
-                //Curve
-                if (isEnabled)
-                {
-                    curveProperty.animationCurveValue = EditorGUI.CurveField(position, curveProperty.displayName, curveProperty.animationCurveValue);
-                    position.y += position.height + CLEARANCE_Y;
-                }
-
+                
                 if (isEnabled)
                 {
                     //Period Interval
@@ -107,7 +99,7 @@ namespace MYB.BlendShapeJitter
             bool isEnabled = property.FindPropertyRelative("isEnabled").boolValue;
             bool loop = property.FindPropertyRelative("loop").boolValue;
 
-            int row = isEnabled ? (loop ? 7 : 4) : 0;
+            int row = isEnabled ? (loop ? 6 : 3) : 0;
             return row * (EditorGUIUtility.singleLineHeight + CLEARANCE_Y);
         }
     }

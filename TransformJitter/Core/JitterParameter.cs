@@ -62,7 +62,6 @@ namespace MYB.TransformJitter
                 bool syncAxis = property.FindPropertyRelative("syncAxis").boolValue;
 
                 //各プロパティー取得
-                var curveProperty = property.FindPropertyRelative("periodToAmplitude");
                 var periodProperty = property.FindPropertyRelative("period");
                 var intervalProperty = property.FindPropertyRelative("interval");
                 var amplitudeProperty = property.FindPropertyRelative("amplitude");
@@ -71,14 +70,7 @@ namespace MYB.TransformJitter
                 var blendNextAmplitudeProperty = property.FindPropertyRelative("blendNextAmplitude");
 
                 position.height = EditorGUIUtility.singleLineHeight;
-
-                //Curve
-                if (isEnabled)
-                {
-                    curveProperty.animationCurveValue = EditorGUI.CurveField(position, curveProperty.displayName, curveProperty.animationCurveValue);
-                    position.y += position.height + CLEARANCE_Y;
-                }
-
+                
                 if ((syncAxis && isXAxis) || (!syncAxis && isEnabled))
                 {
                     //Period Interval
@@ -121,10 +113,9 @@ namespace MYB.TransformJitter
             bool isXAxis = property.FindPropertyRelative("isXAxis").boolValue;
             bool loop = property.FindPropertyRelative("loop").boolValue;
             bool syncAxis = property.FindPropertyRelative("syncAxis").boolValue;
-
-            int row = isEnabled ? 1 : 0;
+            
             int tmpRow = loop ? 5 : 3;
-            row += ((syncAxis && isXAxis) || (!syncAxis && isEnabled)) ? tmpRow : 0;
+            int row = ((syncAxis && isXAxis) || (!syncAxis && isEnabled)) ? tmpRow : 0;
 
             return row * (EditorGUIUtility.singleLineHeight + CLEARANCE_Y);
         }

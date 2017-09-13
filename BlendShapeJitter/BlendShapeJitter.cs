@@ -272,10 +272,13 @@ namespace MYB.BlendShapeJitter
                         self.PlayLoop();
                     else
                         self.StopLoop();
-                } 
+                }
 
                 if (self.loopGroupEnabled)
+                {
+                    self.loopParameter.periodToAmplitude = EditorGUILayout.CurveField("Period to Amplitude", self.loopParameter.periodToAmplitude);
                     EditorGUILayout.PropertyField(loopParameterProperty);
+                }
 
                 //JitterParameter (Once)
                 EditorGUI.BeginChangeCheck();
@@ -287,7 +290,10 @@ namespace MYB.BlendShapeJitter
                 }
 
                 if (self.onceGroupEnabled)
+                {
+                    self.onceParameter.periodToAmplitude = EditorGUILayout.CurveField("Period to Amplitude", self.onceParameter.periodToAmplitude);
                     EditorGUILayout.PropertyField(onceParameterProperty);
+                }
 
                 //Helper List
                 helperReorderableList.DoLayoutList();

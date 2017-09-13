@@ -288,6 +288,8 @@ namespace MYB.TransformJitter
                             EditorGUI.BeginChangeCheck();
                             {
                                 self.loopEnabled[i] = EditorGUILayout.ToggleLeft(self.axisLabel[i], self.loopEnabled[i], EditorStyles.boldLabel);
+                                if (self.loopEnabled[i])
+                                    self.loopParameter[i].periodToAmplitude = EditorGUILayout.CurveField("Period to Amplitude", self.loopParameter[i].periodToAmplitude);
                                 EditorGUILayout.PropertyField(loopParameterProperty.GetArrayElementAtIndex(i));
                             }
                             if (EditorGUI.EndChangeCheck()) self.OnValidate();
@@ -311,9 +313,10 @@ namespace MYB.TransformJitter
                     for (int i = 0; i < 3; i++)
                     {
                         EditorGUI.BeginChangeCheck();
-                        self.onceEnabled[i] = EditorGUILayout.ToggleLeft(self.axisLabel[i], self.onceEnabled[i], EditorStyles.boldLabel);
-                        if (self.onceEnabled[i])
                         {
+                            self.onceEnabled[i] = EditorGUILayout.ToggleLeft(self.axisLabel[i], self.onceEnabled[i], EditorStyles.boldLabel);
+                            if (self.onceEnabled[i])
+                                self.onceParameter[i].periodToAmplitude = EditorGUILayout.CurveField("Period to Amplitude", self.onceParameter[i].periodToAmplitude);
                             EditorGUILayout.PropertyField(onceParameterProperty.GetArrayElementAtIndex(i));
                         }
                         if (EditorGUI.EndChangeCheck()) self.OnValidate();
