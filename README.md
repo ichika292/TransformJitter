@@ -6,6 +6,8 @@ Transformをプロシージャル生成した波形で振幅させるアセッ�
 ## RotationJitter
 (MMD4M_BoneJitterに相当)
 ## ScaleJitter
+## EyeJitter
+AnimationやIKに対応したサッカード眼球運動 (Script Execution Order = 21,000)
 # BlendShapeJitter
 SkinnedMeshRendererのBlendShapeをプロシージャル生成した波形で振幅させるアセットです。
 
