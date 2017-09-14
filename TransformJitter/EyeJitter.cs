@@ -6,7 +6,7 @@ namespace MYB.TransformJitter
     {
         public Transform leftEye, rightEye;
         public float magnification = 1f;                                        //振幅倍率
-        public Vector2 range = new Vector2(3f, 0.5f);                           //片振幅[deg]
+        public Vector2 range = new Vector2(2f, 1f);                             //片振幅[deg]
         public FloatRange interval = new FloatRange(0.04f, 3f, true, false);    //移動間隔[sec]
 
         float timer = 0f;
@@ -39,13 +39,11 @@ namespace MYB.TransformJitter
                 var vec = Vector3.zero;
                 vec.x = Random.Range(-range.y, range.y);
                 vec.y = Random.Range(-range.x, range.x);
-
+                
                 rot = Quaternion.Euler(vec * magnification);
                 
-                if(prevRotation == leftEye.rotation)
+                if (Equal(prevRotation, leftEye.rotation))
                 {
-                    var maxDegreesDelta = Mathf.Max(range.x, range.y) * 2;
-                    rot = Quaternion.RotateTowards(leftEye.rotation, rot, maxDegreesDelta);
                     leftEye.rotation = rot;
                     rightEye.rotation = rot;
                     prevRotation = rot;
@@ -53,12 +51,17 @@ namespace MYB.TransformJitter
             }
 
             //AnimationやIKにより目が操作されているか
-            if (prevRotation != leftEye.rotation)
+            if (!Equal(prevRotation, leftEye.rotation))
             {
                 leftEye.rotation *= rot;
                 rightEye.rotation *= rot;
             }
             prevRotation = leftEye.rotation;
+        }
+
+        bool Equal(Quaternion b, Quaternion c)
+        {
+            return b.x == c.x && b.y == c.y && b.z == c.z && b.w == c.w;
         }
     }
 }
