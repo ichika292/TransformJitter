@@ -3,7 +3,7 @@
 using UnityEditor;
 #endif
 
-namespace MYB.TransformJitter
+namespace MYB.Jitter
 {
     /// <summary>
     /// MinMaxSlider with DelayedFloatField

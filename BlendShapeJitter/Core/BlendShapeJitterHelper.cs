@@ -3,33 +3,54 @@
 using UnityEditor;
 #endif
 
-namespace MYB.BlendShapeJitter
+namespace MYB.Jitter
 {
     /// <summary>
     /// LoopとOnceのStateを管理する。
     /// ReorderableListで設定されたMorphと同数がインスタンス化され、同数のコルーチンが走る。
     /// </summary>
     [System.Serializable]
-    public class JitterHelper
+    public class BlendShapeJitterHelper
     {
         /// <summary>
         /// 再生中に変動するパラメータ群
         /// </summary>
         public class State
         {
-            public JitterParameter param;
+            [System.NonSerialized]
+            public BlendShapeJitterParameter param;
+
+            [System.NonSerialized]
             public bool isProcessing;
+
+            [System.NonSerialized]
             public float timer;         //周期毎にリセットするカウンタ
+
+            [System.NonSerialized]
             public float curPeriod;     //周期(秒)
+
+            [System.NonSerialized]
             public float nextPeriod;
+
+            [System.NonSerialized]
             public float curInterval;   //次周期までの待ち時間(秒)
+
+            [System.NonSerialized]
             public float curAmplitude;  //morphWeight振幅
+
+            [System.NonSerialized]
             public float nextAmplitude;
+
+            [System.NonSerialized]
             public float curOffset;     //morphWeight下限
+
+            [System.NonSerialized]
             public float nextOffset;
+
+            [System.NonSerialized]
             public int currentKeyframeIndex;    //AnimationCurveの現在再生中の(Timerに対応する)Keyframeのindex
 
-            public State(JitterParameter _param)
+            public State(BlendShapeJitterParameter _param)
             {
                 param = _param;
                 nextAmplitude = param.amplitude.Random();
@@ -106,7 +127,7 @@ namespace MYB.BlendShapeJitter
             }
         }
 
-        public JitterImpl manager;
+        public BlendShapeJitterImpl manager;
         public string name;
         public float weightMagnification = 100f;
         public float weight;
@@ -114,14 +135,14 @@ namespace MYB.BlendShapeJitter
 
         protected SkinnedMeshRenderer skinnedMeshRenderer;
         int index;
-
+        
         public State loopState;
         public State onceState;
 
         public bool isProcessing { get { return loopState.isProcessing || onceState.isProcessing; } }
         public bool OnceIsProcessing { get { return onceState.isProcessing; } }
 
-        public JitterHelper(JitterImpl manager, int index, string name, float weightMagnification)
+        public BlendShapeJitterHelper(BlendShapeJitterImpl manager, int index, string name, float weightMagnification)
         {
             Initialize(manager);
             this.index = index;
@@ -129,7 +150,7 @@ namespace MYB.BlendShapeJitter
             this.weightMagnification = weightMagnification;
         }
 
-        public void Initialize(JitterImpl manager)
+        public void Initialize(BlendShapeJitterImpl manager)
         {
             this.manager = manager;
             this.skinnedMeshRenderer = manager.skinnedMeshRenderer;
@@ -197,13 +218,13 @@ namespace MYB.BlendShapeJitter
         /// <summary>
         /// 次周期のパラメータとの補間(AmplitudeとOffset)
         /// </summary>
-        static float CalcBlendState(float current, float next, float t, JitterParameter.BlendState blendState)
+        static float CalcBlendState(float current, float next, float t, BlendShapeJitterParameter.BlendState blendState)
         {
             switch (blendState)
             {
-                case JitterParameter.BlendState.Linear:
+                case BlendShapeJitterParameter.BlendState.Linear:
                     return Mathf.Lerp(current, next, t);
-                case JitterParameter.BlendState.Curve:
+                case BlendShapeJitterParameter.BlendState.Curve:
                     return (next - current) * (-2 * t + 3) * t * t + current;
                 default:
                     return current;
@@ -212,7 +233,7 @@ namespace MYB.BlendShapeJitter
     }
 
 #if UNITY_EDITOR
-    [CustomPropertyDrawer(typeof(JitterHelper))]
+    [CustomPropertyDrawer(typeof(BlendShapeJitterHelper))]
     public class JitterHelperDrawer : PropertyDrawer
     {
         const int CLEARANCE_X = 4;

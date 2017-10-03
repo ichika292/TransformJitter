@@ -3,7 +3,7 @@
 using UnityEditor;
 #endif
 
-namespace MYB.TransformJitter
+namespace MYB.Jitter
 {
     [System.Serializable]
     public class JitterParameter : JitterParameterBase

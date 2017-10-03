@@ -6,17 +6,17 @@ using System.Linq;
 using UnityEditor;
 #endif
 
-namespace MYB.BlendShapeJitter
+namespace MYB.Jitter
 {
-    public class JitterImpl : MonoBehaviour
+    public class BlendShapeJitterImpl : Jitter
     {
         public SkinnedMeshRenderer skinnedMeshRenderer;
         public bool sync;
         public bool overrideOnce;
-        public List<JitterHelper> helperList = new List<JitterHelper>();
+        public List<BlendShapeJitterHelper> helperList = new List<BlendShapeJitterHelper>();
 
-        public JitterParameter loopParameter = new JitterParameter(PrimitiveAnimationCurve.UpDown5, true);
-        public JitterParameter onceParameter = new JitterParameter(PrimitiveAnimationCurve.UpDown1, false);
+        public BlendShapeJitterParameter loopParameter = new BlendShapeJitterParameter(PrimitiveAnimationCurve.UpDown5, true);
+        public BlendShapeJitterParameter onceParameter = new BlendShapeJitterParameter(PrimitiveAnimationCurve.UpDown1, false);
 
         protected List<Coroutine> loopRoutineList = new List<Coroutine>();
         protected List<Coroutine> onceRoutineList = new List<Coroutine>();
@@ -31,7 +31,7 @@ namespace MYB.BlendShapeJitter
         {
             get {
                 bool result = false;
-                foreach (JitterHelper h in helperList)
+                foreach (BlendShapeJitterHelper h in helperList)
                 {
                     if (h.isProcessing)
                     {
@@ -48,7 +48,7 @@ namespace MYB.BlendShapeJitter
         {
             get {
                 bool result = false;
-                foreach (JitterHelper h in helperList)
+                foreach (BlendShapeJitterHelper h in helperList)
                 {
                     if (h.OnceIsProcessing)
                     {
@@ -77,7 +77,7 @@ namespace MYB.BlendShapeJitter
 
         void Awake()
         {
-            foreach (JitterHelper h in helperList)
+            foreach (BlendShapeJitterHelper h in helperList)
                 h.Initialize(this);
         }
 
@@ -94,7 +94,7 @@ namespace MYB.BlendShapeJitter
             if (sync)
             {
                 //helperList[0]のweight計算結果を全モーフで共有
-                foreach (JitterHelper h in helperList)
+                foreach (BlendShapeJitterHelper h in helperList)
                 {
                     if (!weight.HasValue)
                         weight = h.SetMorphWeight();
@@ -104,7 +104,7 @@ namespace MYB.BlendShapeJitter
             }
             else
             {
-                foreach (JitterHelper h in helperList)
+                foreach (BlendShapeJitterHelper h in helperList)
                 {
                     h.SetMorphWeight();
                 }
@@ -126,13 +126,13 @@ namespace MYB.BlendShapeJitter
 
         protected void ResetAllLoopState()
         {
-            foreach (JitterHelper h in helperList)
+            foreach (BlendShapeJitterHelper h in helperList)
                 h.ResetLoopState();
         }
 
         protected void ResetAllOnceState()
         {
-            foreach (JitterHelper h in helperList)
+            foreach (BlendShapeJitterHelper h in helperList)
                 h.ResetOnceState();
         }
 
@@ -152,7 +152,7 @@ namespace MYB.BlendShapeJitter
                 if (weight > 0f)
                 {
                     string name = skinnedMeshRenderer.sharedMesh.GetBlendShapeName(index);
-                    helperList.Add(new JitterHelper(this, index, name, weight));
+                    helperList.Add(new BlendShapeJitterHelper(this, index, name, weight));
                 }
             }
 
@@ -165,7 +165,7 @@ namespace MYB.BlendShapeJitter
         /// </summary>
         protected void ResetMorph()
         {
-            foreach (JitterHelper h in helperList)
+            foreach (BlendShapeJitterHelper h in helperList)
             {
                 h.loopState.isProcessing = false;
                 h.onceState.isProcessing = false;
@@ -182,7 +182,7 @@ namespace MYB.BlendShapeJitter
         /// </summary>
         /// <param name="state"></param>
         /// <returns></returns>
-        protected IEnumerator LoopCoroutine(JitterHelper.State state)
+        protected IEnumerator LoopCoroutine(BlendShapeJitterHelper.State state)
         {
             while (true)
             {
@@ -223,7 +223,7 @@ namespace MYB.BlendShapeJitter
         /// <summary>
         /// 1周再生用コルーチン
         /// </summary>
-        protected IEnumerator OnceCoroutine(JitterHelper.State state, System.Action callback)
+        protected IEnumerator OnceCoroutine(BlendShapeJitterHelper.State state, System.Action callback)
         {
             if (!onceGroupEnabled) yield break;
 
@@ -282,11 +282,19 @@ namespace MYB.BlendShapeJitter
             loopGroupEnabled = false;
             callback();
         }
-
-
+        
+        public override void FadeIn(float second) { }
+        public override void FadeOut(float second) { }
+        public override void Initialize() { }
+        public override void PlayLoop() { }
+        public override void PlayLoop(float magnification) { }
+        public override void PlayOnce() { }
+        public override void PlayOnce(float magnification) { }
+        public override void StopLoop() { }
+        
 #if UNITY_EDITOR
-        [CustomEditor(typeof(JitterImpl))]
-        public class MorphJitterImplEditor : Editor
+        [CustomEditor(typeof(BlendShapeJitterImpl))]
+        public class BlendShapeJitterImplEditor : Editor
         {
             public override void OnInspectorGUI()
             {

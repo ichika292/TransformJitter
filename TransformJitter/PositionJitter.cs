@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEditor;
 #endif
 
-namespace MYB.TransformJitter
+namespace MYB.Jitter
 {
     /// <summary>
     /// TransformのPositionのX,Y,Zそれぞれを任意の波形で振幅させます。
@@ -30,7 +30,7 @@ namespace MYB.TransformJitter
         /// <summary>
         /// ループ再生開始
         /// </summary>
-        public void PlayLoop()
+        public override void PlayLoop()
         {
             _PlayLoop(1f);
         }
@@ -38,7 +38,7 @@ namespace MYB.TransformJitter
         /// <summary>
         /// ループ再生開始　振幅倍率設定あり
         /// </summary>
-        public void PlayLoop(float magnification)
+        public override void PlayLoop(float magnification)
         {
             _PlayLoop(magnification);
         }
@@ -46,7 +46,7 @@ namespace MYB.TransformJitter
         /// <summary>
         /// ループ再生停止
         /// </summary>
-        public void StopLoop()
+        public override void StopLoop()
         {
             ResetRoutineList(loopRoutineList);
             ResetAllLoopState();
@@ -58,7 +58,7 @@ namespace MYB.TransformJitter
         /// ループ再生フェードイン
         /// </summary>
         /// <param name="second">フェード時間</param>
-        public void FadeIn(float second)
+        public override void FadeIn(float second)
         {
             if (fadeInRoutine != null) return;
             if (fadeOutRoutine != null)
@@ -79,7 +79,7 @@ namespace MYB.TransformJitter
         /// ループ再生フェードアウト
         /// </summary>
         /// <param name="second">フェード時間</param>
-        public void FadeOut(float second)
+        public override void FadeOut(float second)
         {
             if (fadeOutRoutine != null) return;
 
@@ -92,7 +92,7 @@ namespace MYB.TransformJitter
             fadeOutRoutine = StartCoroutine(FadeOutCoroutine(second, StopLoop));
         }
 
-        public void _PlayLoop(float magnification)
+        void _PlayLoop(float magnification)
         {
             if (isProcessing) StopLoop();
 
@@ -114,7 +114,7 @@ namespace MYB.TransformJitter
         /// <summary>
         /// 1周再生
         /// </summary>
-        public void PlayOnce()
+        public override void PlayOnce()
         {
             _PlayOnce(1f);
         }
@@ -122,12 +122,12 @@ namespace MYB.TransformJitter
         /// <summary>
         /// 1周再生　振幅倍率設定あり
         /// </summary>
-        public void PlayOnce(float magnification)
+        public override void PlayOnce(float magnification)
         {
             _PlayOnce(magnification);
         }
 
-        public void _PlayOnce(float magnification)
+        void _PlayOnce(float magnification)
         {
             if (!onceGroupEnabled) return;
 
@@ -162,7 +162,7 @@ namespace MYB.TransformJitter
         /// <summary>
         /// 全再生停止 & 初期化
         /// </summary>
-        public void Initialize()
+        public override void Initialize()
         {
             ResetRoutineList(loopRoutineList);
             ResetAllLoopState();

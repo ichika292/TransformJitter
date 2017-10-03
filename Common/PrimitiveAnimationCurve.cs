@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace MYB.TransformJitter
+namespace MYB.Jitter
 {
     public static class PrimitiveAnimationCurve
     {

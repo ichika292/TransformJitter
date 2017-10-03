@@ -6,9 +6,9 @@ using System.Linq;
 using UnityEditor;
 #endif
 
-namespace MYB.TransformJitter
+namespace MYB.Jitter
 {
-    public class PositionJitImpl : MonoBehaviour
+    public class PositionJitImpl : Jitter
     {
         public Transform target;
         public UpdateMode updateMode = UpdateMode.Reference;
@@ -212,7 +212,8 @@ namespace MYB.TransformJitter
 
         protected void ResetPosition()
         {
-            target.localPosition = referencePosition;
+            if (EditorApplication.isPlaying)
+                target.localPosition = referencePosition;
         }
 
         protected Vector3 GetCurrentWeight()
@@ -335,6 +336,15 @@ namespace MYB.TransformJitter
             loopGroupEnabled = false;
             callback();
         }
+
+        public override void FadeIn(float second) { }
+        public override void FadeOut(float second) { }
+        public override void Initialize() { }
+        public override void PlayLoop() { }
+        public override void PlayLoop(float magnification) { }
+        public override void PlayOnce() { }
+        public override void PlayOnce(float magnification) { }
+        public override void StopLoop() { }
 
 #if UNITY_EDITOR
         //Inspector拡張クラス

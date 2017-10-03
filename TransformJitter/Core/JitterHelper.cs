@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace MYB.TransformJitter
+namespace MYB.Jitter
 {
     /// <summary>
     /// LoopとOnceのStateを管理する。
@@ -14,15 +14,34 @@ namespace MYB.TransformJitter
         /// </summary>
         public class State
         {
+            [System.NonSerialized]
             public JitterParameter param;
+
+            [System.NonSerialized]
             public bool isProcessing;
+
+            [System.NonSerialized]
             public float timer;         //周期毎にリセットするカウンタ
+
+            [System.NonSerialized]
             public float curPeriod;     //周期(秒)
+
+            [System.NonSerialized]
             public float nextPeriod;
+
+            [System.NonSerialized]
             public float curInterval;   //次周期までの待ち時間(秒)
+
+            [System.NonSerialized]
             public float curAmplitude;  //angleWeight振幅
+
+            [System.NonSerialized]
             public float nextAmplitude;
+
+            [System.NonSerialized]
             public float curOffset;     //angleWeight下限
+
+            [System.NonSerialized]
             public float nextOffset;
 
             public State(JitterParameter _param)
@@ -82,8 +101,11 @@ namespace MYB.TransformJitter
                 timer = 0f;
             }
         }
-        
+
+        [System.NonSerialized]
         public State loopState;
+
+        [System.NonSerialized]
         public State onceState;
 
         public bool isProcessing { get { return loopState.isProcessing || onceState.isProcessing; } }

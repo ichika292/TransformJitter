@@ -1,12 +1,12 @@
 ﻿using UnityEngine;
 
-namespace MYB.BlendShapeJitter
+namespace MYB.Jitter
 {
     /// <summary>
     /// 波形生成用のプロパティ(再生中に変動しない)
     /// ループ用と外部入力用の2つインスタンス化される。
     /// </summary>
-    public class JitterParameterBase
+    public class BlendShapeJitterParameterBase
     {
         //次周期のパラメータとの補間(AmplitudeとOffset)
         public enum BlendState
@@ -44,7 +44,7 @@ namespace MYB.BlendShapeJitter
         /// </summary>
         /// <param name="curve">timer→Amplitudeの変換曲線</param>
         /// <param name="loop">Loop用かOnce用か。</param>
-        public JitterParameterBase(AnimationCurve curve, bool loop)
+        public BlendShapeJitterParameterBase(AnimationCurve curve, bool loop)
         {
             period = new FloatRange(MIN_LIMIT_PERIOD, MAX_LIMIT_PERIOD, true, false);
             interval = new FloatRange(MIN_LIMIT_INTERVAL, MAX_LIMIT_INTERVAL, true, false);

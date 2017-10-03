@@ -3,10 +3,10 @@
 using UnityEditor;
 #endif
 
-namespace MYB.BlendShapeJitter
+namespace MYB.Jitter
 {
     [System.Serializable]
-    public class JitterParameter : JitterParameterBase
+    public class BlendShapeJitterParameter : BlendShapeJitterParameterBase
     {
         public float magnification;
 
@@ -16,7 +16,7 @@ namespace MYB.BlendShapeJitter
         /// </summary>
         /// <param name="curve">timer→Amplitudeの変換曲線</param>
         /// <param name="loop">ループ用か外部入力用か。</param>
-        public JitterParameter(AnimationCurve curve, bool loop) : base(curve, loop)
+        public BlendShapeJitterParameter(AnimationCurve curve, bool loop) : base(curve, loop)
         {
             magnification = 1f;
             period.min = 1f;
@@ -39,8 +39,8 @@ namespace MYB.BlendShapeJitter
     }
 
 #if UNITY_EDITOR
-    [CustomPropertyDrawer(typeof(JitterParameter))]
-    public class JitterParameterDrawer : PropertyDrawer
+    [CustomPropertyDrawer(typeof(BlendShapeJitterParameter))]
+    public class BlendShapeJitterParameterDrawer : PropertyDrawer
     {
         const int CLEARANCE_Y = 2;
 
@@ -73,14 +73,14 @@ namespace MYB.BlendShapeJitter
                     //Blend State
                     if (loop)
                     {
-                        var tmp = (System.Enum)(JitterParameter.BlendState)blendNextPeriodProperty.enumValueIndex;
-                        blendNextPeriodProperty.enumValueIndex = (int)(JitterParameter.BlendState)EditorGUI.EnumPopup(
+                        var tmp = (System.Enum)(BlendShapeJitterParameter.BlendState)blendNextPeriodProperty.enumValueIndex;
+                        blendNextPeriodProperty.enumValueIndex = (int)(BlendShapeJitterParameter.BlendState)EditorGUI.EnumPopup(
                             position, blendNextPeriodProperty.displayName, tmp);
 
                         position.y += position.height + CLEARANCE_Y;
 
-                        tmp = (System.Enum)(JitterParameter.BlendState)blendNextAmplitudeProperty.enumValueIndex;
-                        blendNextAmplitudeProperty.enumValueIndex = (int)(JitterParameter.BlendState)EditorGUI.EnumPopup(
+                        tmp = (System.Enum)(BlendShapeJitterParameter.BlendState)blendNextAmplitudeProperty.enumValueIndex;
+                        blendNextAmplitudeProperty.enumValueIndex = (int)(BlendShapeJitterParameter.BlendState)EditorGUI.EnumPopup(
                             position, blendNextAmplitudeProperty.displayName, tmp);
                     }
                 }

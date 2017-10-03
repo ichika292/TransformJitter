@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace MYB.TransformJitter
+namespace MYB.Jitter
 {
     /// <summary>
     /// Transformの更新方法

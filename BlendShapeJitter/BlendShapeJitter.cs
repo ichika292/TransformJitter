@@ -4,14 +4,14 @@ using UnityEditor;
 using UnityEditorInternal;
 #endif
 
-namespace MYB.BlendShapeJitter
+namespace MYB.Jitter
 {
     /// <summary>
     /// SkinnedMeshRendererのBlendShapeを任意の波形で振幅させます。
     /// SkinnedMeshRendererコンポーネントからBlendShapesの値を変更し、Setを押すことで振幅させるモーフを設定出来ます。
     /// PlayOnce()を実行することで、Onceの波形を任意のタイミングでLoopの波形に加算出来ます。
     /// </summary>
-    public class BlendShapeJitter : JitterImpl
+    public class BlendShapeJitter : BlendShapeJitterImpl
     {
         void OnEnable()
         {
@@ -31,7 +31,7 @@ namespace MYB.BlendShapeJitter
         /// <summary>
         /// ループ再生開始
         /// </summary>
-        public void PlayLoop()
+        public override void PlayLoop()
         {
             _PlayLoop(1f);
         }
@@ -39,7 +39,7 @@ namespace MYB.BlendShapeJitter
         /// <summary>
         /// ループ再生開始　振幅倍率設定あり
         /// </summary>
-        public void PlayLoop(float magnification)
+        public override void PlayLoop(float magnification)
         {
             _PlayLoop(Mathf.Max(0f, magnification));
         }
@@ -47,8 +47,10 @@ namespace MYB.BlendShapeJitter
         /// <summary>
         /// ループ再生停止
         /// </summary>
-        public void StopLoop()
+        public override void StopLoop()
         {
+            if (!EditorApplication.isPlaying) return;
+
             ResetRoutineList(loopRoutineList);
             ResetAllLoopState();
 
@@ -59,7 +61,7 @@ namespace MYB.BlendShapeJitter
         /// ループ再生フェードイン
         /// </summary>
         /// <param name="second">フェード時間</param>
-        public void FadeIn(float second)
+        public override void FadeIn(float second)
         {
             if (fadeInRoutine != null) return;
             if (fadeOutRoutine != null)
@@ -80,7 +82,7 @@ namespace MYB.BlendShapeJitter
         /// ループ再生フェードアウト
         /// </summary>
         /// <param name="second">フェード時間</param>
-        public void FadeOut(float second)
+        public override void FadeOut(float second)
         {
             if (fadeOutRoutine != null) return;
 
@@ -112,7 +114,7 @@ namespace MYB.BlendShapeJitter
             }
             else
             {
-                foreach (JitterHelper h in helperList)
+                foreach (BlendShapeJitterHelper h in helperList)
                 {
                     var routine = StartCoroutine(LoopCoroutine(h.loopState));
                     loopRoutineList.Add(routine);
@@ -126,7 +128,7 @@ namespace MYB.BlendShapeJitter
         /// <summary>
         /// 1周再生
         /// </summary>
-        public void PlayOnce()
+        public override void PlayOnce()
         {
             _PlayOnce(1f);
         }
@@ -134,7 +136,7 @@ namespace MYB.BlendShapeJitter
         /// <summary>
         /// 1周再生　振幅倍率設定あり
         /// </summary>
-        public void PlayOnce(float magnification)
+        public override void PlayOnce(float magnification)
         {
             _PlayOnce(Mathf.Max(0f, magnification));
         }
@@ -151,7 +153,7 @@ namespace MYB.BlendShapeJitter
             //振幅倍率
             onceParameter.magnification = magnification;
 
-            foreach (JitterHelper h in helperList)
+            foreach (BlendShapeJitterHelper h in helperList)
             {
                 //再生終了時にループ再生していない場合、初期化
                 var routine = StartCoroutine(OnceCoroutine(h.onceState, StopOnce));
@@ -171,11 +173,11 @@ namespace MYB.BlendShapeJitter
         }
 
         #endregion
-        
+
         /// <summary>
         /// 全再生停止 & 初期化
         /// </summary>
-        public void Initialize()
+        public override void Initialize()
         {
             ResetRoutineList(loopRoutineList);
             ResetAllLoopState();
@@ -231,7 +233,7 @@ namespace MYB.BlendShapeJitter
                 {
                     if (!EditorApplication.isPlaying)
                     {
-                        self.helperList.Add(new JitterHelper(self, -1, "", 100f));
+                        self.helperList.Add(new BlendShapeJitterHelper(self, -1, "", 100f));
                         list.index = helperListProperty.arraySize;
                     }
                 };
