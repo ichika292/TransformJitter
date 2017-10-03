@@ -14,3 +14,10 @@ SkinnedMeshRendererのBlendShapeをプロシージャル生成した波形で振
 (MMD4M_MorphJitterに相当)
 
 (暫定)[チュートリアル MMD4Mecanim MorphJitter](https://www.youtube.com/watch?v=ZsHUdjEAFBk)
+
+# Playable
+Timeline用のPlayableAsset
+## FadeAsset
+シーケンス開始時にFadein、終了時にFadeoutする。
+## OnceAsset
+シーケンス開始時にPlayOnceを実行する。
