@@ -212,7 +212,9 @@ namespace MYB.Jitter
 
         protected void ResetScale()
         {
+#if UNITY_EDITOR
             if (EditorApplication.isPlaying)
+#endif
                 target.localScale = referenceScale;
         }
 

@@ -212,7 +212,9 @@ namespace MYB.Jitter
 
         protected void ResetPosition()
         {
+#if UNITY_EDITOR
             if (EditorApplication.isPlaying)
+#endif
                 target.localPosition = referencePosition;
         }
 

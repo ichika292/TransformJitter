@@ -49,8 +49,9 @@ namespace MYB.Jitter
         /// </summary>
         public override void StopLoop()
         {
+#if UNITY_EDITOR
             if (!EditorApplication.isPlaying) return;
-
+#endif
             ResetRoutineList(loopRoutineList);
             ResetAllLoopState();
 

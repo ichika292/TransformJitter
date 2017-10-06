@@ -213,7 +213,9 @@ namespace MYB.Jitter
 
         protected void ResetRotation()
         {
+#if UNITY_EDITOR
             if(EditorApplication.isPlaying)
+#endif
                 target.localRotation = Quaternion.Euler(referenceRotation);
         }
 
