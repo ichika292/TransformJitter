@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System.Linq;
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEditorInternal;
@@ -198,10 +199,12 @@ namespace MYB.Jitter
             SerializedProperty syncProperty;
             SerializedProperty overrideOnceProperty;
             SerializedProperty helperListProperty;
+            SerializedProperty damperListProperty;
             SerializedProperty loopParameterProperty;
             SerializedProperty onceParameterProperty;
 
             ReorderableList helperReorderableList;
+            ReorderableList damperReorderableList;
 
             void OnEnable()
             {
@@ -210,15 +213,16 @@ namespace MYB.Jitter
                 syncProperty = serializedObject.FindProperty("sync");
                 overrideOnceProperty = serializedObject.FindProperty("overrideOnce");
                 helperListProperty = serializedObject.FindProperty("helperList");
+                damperListProperty = serializedObject.FindProperty("damperList");
                 loopParameterProperty = serializedObject.FindProperty("loopParameter");
                 onceParameterProperty = serializedObject.FindProperty("onceParameter");
 
-                //ReorderableList設定
+                //helperReorderableList設定
                 helperReorderableList = new ReorderableList(serializedObject, helperListProperty);
 
                 helperReorderableList.drawHeaderCallback = (rect) =>
                 {
-                    EditorGUI.LabelField(rect, "Morph name & Magnification");
+                    EditorGUI.LabelField(rect, "Main Morph & Magnification");
                 };
 
                 helperReorderableList.drawElementCallback = (rect, index, isActive, isFocused) =>
@@ -242,6 +246,28 @@ namespace MYB.Jitter
                 helperReorderableList.onCanRemoveCallback = (list) =>
                 {
                     return !EditorApplication.isPlaying;
+                };
+
+                //ReorderableList設定
+                damperReorderableList = new ReorderableList(serializedObject, damperListProperty);
+
+                damperReorderableList.drawHeaderCallback = (rect) =>
+                {
+                    EditorGUI.LabelField(rect, "Damper Morph & Magnification");
+                };
+
+                damperReorderableList.drawElementCallback = (rect, index, isActive, isFocused) =>
+                {
+                    var element = damperListProperty.GetArrayElementAtIndex(index);
+                    rect.height -= 4;
+                    rect.y += 2;
+                    EditorGUI.PropertyField(rect, element);
+                };
+
+                helperReorderableList.onAddCallback = (list) =>
+                {
+                    self.damperList.Add(new BlendShapeJitterDamper(self, -1, "", 0.5f));
+                    list.index = damperListProperty.arraySize;
                 };
             }
 
@@ -301,12 +327,15 @@ namespace MYB.Jitter
                 //Helper List
                 helperReorderableList.DoLayoutList();
 
+                //Exclusive List
+                damperReorderableList.DoLayoutList();
+
                 //MecanimModelからWeight>0のモーフを取得
                 EditorGUILayout.BeginHorizontal();
                 {
                     EditorGUI.BeginDisabledGroup(EditorApplication.isPlaying);
-                    if (GUILayout.Button("Set", GUILayout.Width(80))) self.SetMorph();
-                    if (GUILayout.Button("Reset", GUILayout.Width(80))) self.ResetMorph();
+                    if (GUILayout.Button("Get Main", GUILayout.Width(100))) self.GetMainMorph();
+                    if (GUILayout.Button("Get Exclusive", GUILayout.Width(100))) self.GetDampMorph();
                     EditorGUI.EndDisabledGroup();
 
                     GUILayout.FlexibleSpace();

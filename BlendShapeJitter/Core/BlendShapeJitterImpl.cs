@@ -14,6 +14,7 @@ namespace MYB.Jitter
         public bool sync;
         public bool overrideOnce;
         public List<BlendShapeJitterHelper> helperList = new List<BlendShapeJitterHelper>();
+        public List<BlendShapeJitterDamper> damperList = new List<BlendShapeJitterDamper>();
 
         public BlendShapeJitterParameter loopParameter = new BlendShapeJitterParameter(PrimitiveAnimationCurve.UpDown5, true);
         public BlendShapeJitterParameter onceParameter = new BlendShapeJitterParameter(PrimitiveAnimationCurve.UpDown1, false);
@@ -79,6 +80,9 @@ namespace MYB.Jitter
         {
             foreach (BlendShapeJitterHelper h in helperList)
                 h.Initialize(this);
+
+            foreach (BlendShapeJitterDamper d in damperList)
+                d.Initialize(this);
         }
 
         void Update()
@@ -91,22 +95,24 @@ namespace MYB.Jitter
         protected void SetMorphWeight()
         {
             float? weight = null;
-            if (sync)
+            foreach (BlendShapeJitterHelper h in helperList)
             {
-                //helperList[0]のweight計算結果を全モーフで共有
-                foreach (BlendShapeJitterHelper h in helperList)
+                if (!weight.HasValue)
                 {
-                    if (!weight.HasValue)
-                        weight = h.SetMorphWeight();
-                    else
-                        h.SetMorphWeight(weight.Value);
+                    //helperList[0]のweightを排他リストのweightに応じて減らす
+                    weight = h.GetMorphWeight();
+                    float tmp = weight.Value;
+                    foreach (BlendShapeJitterDamper d in damperList)
+                        tmp *= 1f - d.GetCurrentWeight();
+                    h.SetMorphWeight(tmp);
                 }
-            }
-            else
-            {
-                foreach (BlendShapeJitterHelper h in helperList)
+                else
                 {
-                    h.SetMorphWeight();
+                    if (sync)
+                        //helperList[0]のweight計算結果を全モーフで共有
+                        h.SetMorphWeight(weight.Value);
+                    else
+                        h.SetMorphWeight();
                 }
             }
         }
@@ -115,6 +121,8 @@ namespace MYB.Jitter
         protected void OnValidate()
         {
             loopParameter.AdjustParameter();
+            SetMainMorphName();
+            SetDampMorphName();
         }
 
         protected void ResetRoutineList(List<Coroutine> list)
@@ -139,11 +147,12 @@ namespace MYB.Jitter
         /// <summary>
         /// MecanimModel.morphListからWeight>0のモーフを取得
         /// </summary>
-        protected void SetMorph()
+        protected void GetMainMorph()
         {
             if (skinnedMeshRenderer.sharedMesh.blendShapeCount == 0) return;
 
-            ResetMorph();
+            helperList.Clear();
+            helperList.TrimExcess();
 
             //Weight > 0fのBlendShapeを取得
             for (int index = 0; index < skinnedMeshRenderer.sharedMesh.blendShapeCount; index++)
@@ -159,22 +168,39 @@ namespace MYB.Jitter
             if (helperList.Count() == 0)
                 Debug.Log("BlendShape (Weight > 0) not found.");
         }
+        
+        protected void GetDampMorph()
+        {
+            if (skinnedMeshRenderer.sharedMesh.blendShapeCount == 0) return;
 
-        /// <summary>
-        /// helperListのリセット
-        /// </summary>
-        protected void ResetMorph()
+            damperList.Clear();
+            damperList.TrimExcess();
+
+            //Weight > 0fのBlendShapeを取得
+            for (int index = 0; index < skinnedMeshRenderer.sharedMesh.blendShapeCount; index++)
+            {
+                float weight = skinnedMeshRenderer.GetBlendShapeWeight(index);
+                if (weight > 0f)
+                {
+                    string name = skinnedMeshRenderer.sharedMesh.GetBlendShapeName(index);
+                    damperList.Add(new BlendShapeJitterDamper(this, index, name, 0.5f));
+                }
+            }
+
+            if (damperList.Count() == 0)
+                Debug.Log("BlendShape (Weight > 0) not found.");
+        }
+
+        protected void SetMainMorphName()
         {
             foreach (BlendShapeJitterHelper h in helperList)
-            {
-                h.loopState.isProcessing = false;
-                h.onceState.isProcessing = false;
-                h.weight = 0f;
-                h.name = "";
-                h.UpdateMorph();
-            }
-            helperList.Clear();
-            helperList.TrimExcess();
+                h.SetMorphName();
+        }
+
+        protected void SetDampMorphName()
+        {
+            foreach (BlendShapeJitterDamper d in damperList)
+                d.SetMorphName();
         }
 
         /// <summary>

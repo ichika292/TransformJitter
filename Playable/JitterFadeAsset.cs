@@ -6,7 +6,7 @@ using UnityEngine.Playables;
 namespace MYB.Jitter
 {
     [System.Serializable]
-    public class FadeAsset : PlayableAsset
+    public class JitterFadeAsset : PlayableAsset
     {
         public ExposedReference<Jitter> jitter;
         public float fadeinTime = 1f;
@@ -14,7 +14,7 @@ namespace MYB.Jitter
 
         public override Playable CreatePlayable(PlayableGraph graph, GameObject owner)
         {
-            var playable = ScriptPlayable<FadePlayable>.Create(graph);
+            var playable = ScriptPlayable<JitterFadePlayable>.Create(graph);
             var fadePlayable = playable.GetBehaviour();
 
             var timelineJitter = jitter.Resolve(graph.GetResolver());

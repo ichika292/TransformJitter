@@ -5,7 +5,7 @@ using UnityEngine.Playables;
 
 namespace MYB.Jitter
 {
-    public class OncePlayable : PlayableBehaviour
+    public class JitterOncePlayable : PlayableBehaviour
     {
         private Jitter _jitter;
         private float _magnification;

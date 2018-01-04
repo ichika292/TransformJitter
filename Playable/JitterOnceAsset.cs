@@ -6,14 +6,14 @@ using UnityEngine.Playables;
 namespace MYB.Jitter
 {
     [System.Serializable]
-    public class OnceAsset : PlayableAsset
+    public class JitterOnceAsset : PlayableAsset
     {
         public ExposedReference<Jitter> jitter;
         public float magnification = 1f;
 
         public override Playable CreatePlayable(PlayableGraph graph, GameObject owner)
         {
-            var playable = ScriptPlayable<OncePlayable>.Create(graph);
+            var playable = ScriptPlayable<JitterOncePlayable>.Create(graph);
             var OncePlayable = playable.GetBehaviour();
 
             var timelineJitter = jitter.Resolve(graph.GetResolver());

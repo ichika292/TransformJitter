@@ -132,10 +132,8 @@ namespace MYB.Jitter
         public float weightMagnification = 100f;
         public float weight;
         public bool overrideWeight;
-
-        protected SkinnedMeshRenderer skinnedMeshRenderer;
-        int index;
-        
+        public int index;
+                
         public State loopState;
         public State onceState;
 
@@ -153,7 +151,6 @@ namespace MYB.Jitter
         public void Initialize(BlendShapeJitterImpl manager)
         {
             this.manager = manager;
-            this.skinnedMeshRenderer = manager.skinnedMeshRenderer;
             loopState = new State(manager.loopParameter);
             onceState = new State(manager.onceParameter);
         }
@@ -180,6 +177,7 @@ namespace MYB.Jitter
         /// </summary>
         public void UpdateMorph()
         {
+            var skinnedMeshRenderer = manager.skinnedMeshRenderer;
             if (skinnedMeshRenderer == null) return;
 
             index = skinnedMeshRenderer.sharedMesh.GetBlendShapeIndex(name);
@@ -192,15 +190,7 @@ namespace MYB.Jitter
         /// </summary>
         public float SetMorphWeight()
         {
-            var weight = 0f;
-
-            if (manager.loopGroupEnabled)
-                weight += loopState.GetCurrentWeight();
-
-            if (manager.onceGroupEnabled)
-                weight += onceState.GetCurrentWeight();
-
-            this.weight = Mathf.Clamp01(weight);
+            this.weight = GetMorphWeight();
             UpdateMorph();
             return weight;
         }
@@ -213,6 +203,19 @@ namespace MYB.Jitter
         {
             this.weight = Mathf.Clamp01(weight);
             UpdateMorph();
+        }
+        
+        public float GetMorphWeight()
+        {
+            var weight = 0f;
+
+            if (manager.loopGroupEnabled)
+                weight += loopState.GetCurrentWeight();
+
+            if (manager.onceGroupEnabled)
+                weight += onceState.GetCurrentWeight();
+
+            return Mathf.Clamp01(weight);
         }
 
         /// <summary>
@@ -230,6 +233,11 @@ namespace MYB.Jitter
                     return current;
             }
         }
+        
+        public void SetMorphName()
+        {
+            name = manager.skinnedMeshRenderer.sharedMesh.GetBlendShapeName(index);
+        }
     }
 
 #if UNITY_EDITOR
@@ -243,13 +251,20 @@ namespace MYB.Jitter
             using (new EditorGUI.PropertyScope(position, label, property))
             {
                 //各プロパティー取得
+                var indexProperty = property.FindPropertyRelative("index");
                 var nameProperty = property.FindPropertyRelative("name");
                 var weightProperty = property.FindPropertyRelative("weight");
                 var magnificationProperty = property.FindPropertyRelative("weightMagnification");
 
                 //表示位置を調整
+                var indexRect = new Rect(position)
+                {
+                    width = 30
+                };
+
                 var nameRect = new Rect(position)
                 {
+                    x = position.x + indexRect.width + CLEARANCE_X,
                     width = position.width / 5f
                 };
 
@@ -262,15 +277,18 @@ namespace MYB.Jitter
                 var magnificationRect = new Rect(weightRect)
                 {
                     x = weightRect.x + weightRect.width + CLEARANCE_X,
-                    width = weightRect.width * 3 - CLEARANCE_X * 2
+                    width = weightRect.width * 3 - CLEARANCE_X * 3 - 30
                 };
 
-                //Morph Name
+                //Morph Index
                 EditorGUI.BeginDisabledGroup(EditorApplication.isPlaying);
                 {
-                    nameProperty.stringValue = EditorGUI.DelayedTextField(nameRect, nameProperty.stringValue);
+                    indexProperty.intValue = EditorGUI.IntField(indexRect, indexProperty.intValue);
                 }
                 EditorGUI.EndDisabledGroup();
+
+                //Morph Name
+                EditorGUI.LabelField(nameRect, nameProperty.stringValue);
 
                 //Morph Weight
                 var weight = weightProperty.floatValue * magnificationProperty.floatValue;

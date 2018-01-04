@@ -5,7 +5,7 @@ using UnityEngine.Playables;
 
 namespace MYB.Jitter
 {
-    public class FadePlayable : PlayableBehaviour
+    public class JitterFadePlayable : PlayableBehaviour
     {
         private Jitter _jitter;
         private float _fadeinTime;

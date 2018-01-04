@@ -92,7 +92,7 @@ namespace MYB.Jitter
             fadeOutRoutine = StartCoroutine(FadeOutCoroutine(second, StopLoop));
         }
 
-        void _PlayLoop(float magnification)
+        public void _PlayLoop(float magnification)
         {
             if (isProcessing) StopLoop();
 
@@ -127,7 +127,7 @@ namespace MYB.Jitter
             _PlayOnce(magnification);
         }
 
-        void _PlayOnce(float magnification)
+        public void _PlayOnce(float magnification)
         {
             if (!onceGroupEnabled) return;
 
