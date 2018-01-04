@@ -80,6 +80,43 @@ namespace MYB.Jitter
                 curAmplitude = param.amplitude.Random();
                 curOffset = param.offset.Random();
             }
+            
+            public void UpdateLoop()
+            {
+                isProcessing = true;
+
+                if (timer < 1f)
+                {
+                    timer += Time.deltaTime / GetCurrentPeriod();
+                }
+                else if (timer < 1f + curInterval)
+                {
+                    timer += Time.deltaTime;
+                }
+                else
+                {
+                    timer = 0f;
+                    SetNextParameter();
+                }
+            }
+
+            public void UpdateOnce(System.Action callback)
+            {
+                if (timer < 1f)
+                {
+                    timer += Time.deltaTime / GetCurrentPeriod();
+                }
+                else if (timer < 1f + curInterval)
+                {
+                    timer += Time.deltaTime;
+                }
+                else
+                {
+                    timer = 0f;
+                    isProcessing = false;
+                    callback();
+                }
+            }
 
             /// <summary>
             /// 現在のWeightを計算
@@ -136,8 +173,7 @@ namespace MYB.Jitter
                 
         public State loopState;
         public State onceState;
-
-        public bool isProcessing { get { return loopState.isProcessing || onceState.isProcessing; } }
+        
         public bool OnceIsProcessing { get { return onceState.isProcessing; } }
 
         public BlendShapeJitterHelper(BlendShapeJitterImpl manager, int index, string name, float weightMagnification)

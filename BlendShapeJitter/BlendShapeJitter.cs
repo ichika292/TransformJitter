@@ -14,13 +14,6 @@ namespace MYB.Jitter
     /// </summary>
     public class BlendShapeJitter : BlendShapeJitterImpl
     {
-        void OnEnable()
-        {
-            if (skinnedMeshRenderer == null) return;
-
-            PlayLoop();
-        }
-
         void OnDisable()
         {
             if (skinnedMeshRenderer == null) return;
@@ -34,7 +27,7 @@ namespace MYB.Jitter
         /// </summary>
         public override void PlayLoop()
         {
-            _PlayLoop(1f);
+            _PlayLoop(PlayState.Play, 1f);
         }
 
         /// <summary>
@@ -42,21 +35,7 @@ namespace MYB.Jitter
         /// </summary>
         public override void PlayLoop(float magnification)
         {
-            _PlayLoop(Mathf.Max(0f, magnification));
-        }
-
-        /// <summary>
-        /// ループ再生停止
-        /// </summary>
-        public override void StopLoop()
-        {
-#if UNITY_EDITOR
-            if (!EditorApplication.isPlaying) return;
-#endif
-            ResetRoutineList(loopRoutineList);
-            ResetAllLoopState();
-
-            SetMorphWeight();
+            _PlayLoop(PlayState.Play, Mathf.Max(0f, magnification));
         }
 
         /// <summary>
@@ -65,19 +44,13 @@ namespace MYB.Jitter
         /// <param name="second">フェード時間</param>
         public override void FadeIn(float second)
         {
-            if (fadeInRoutine != null) return;
-            if (fadeOutRoutine != null)
-            {
-                StopCoroutine(fadeOutRoutine);
-                fadeOutRoutine = null;
-            }
-            if (!loopGroupEnabled)
-            {
-                loopGroupEnabled = true;
-                _PlayLoop(0f);
-            }
+            if (playState == PlayState.Play ||
+                playState == PlayState.Fadein) return;
 
-            fadeInRoutine = StartCoroutine(FadeInCoroutine(second));
+            playState = PlayState.Fadein;
+            fadeSpeed = 1f / Mathf.Max(0.01f, second);
+            
+            _PlayLoop(PlayState.Fadein, 0f);
         }
 
         /// <summary>
@@ -86,42 +59,10 @@ namespace MYB.Jitter
         /// <param name="second">フェード時間</param>
         public override void FadeOut(float second)
         {
-            if (fadeOutRoutine != null) return;
+            if (playState == PlayState.Stop) return;
 
-            if (fadeInRoutine != null)
-            {
-                StopCoroutine(fadeInRoutine);
-                fadeInRoutine = null;
-            }
-
-            fadeOutRoutine = StartCoroutine(FadeOutCoroutine(second, StopLoop));
-        }
-
-        void _PlayLoop(float magnification)
-        {
-            if (helperList.Count == 0) return;
-
-            StopLoop();
-
-            //振幅倍率
-            loopParameter.magnification = magnification;
-
-            if (!loopGroupEnabled) return;
-
-            if (sync)
-            {
-                //helperList[0]のstateを全モーフで共有
-                var routine = StartCoroutine(LoopCoroutine(helperList[0].loopState));
-                loopRoutineList.Add(routine);
-            }
-            else
-            {
-                foreach (BlendShapeJitterHelper h in helperList)
-                {
-                    var routine = StartCoroutine(LoopCoroutine(h.loopState));
-                    loopRoutineList.Add(routine);
-                }
-            }
+            playState = PlayState.Fadeout;
+            fadeSpeed = 1f / Mathf.Max(0.01f, second);
         }
 
         #endregion
@@ -143,52 +84,8 @@ namespace MYB.Jitter
             _PlayOnce(Mathf.Max(0f, magnification));
         }
 
-        void _PlayOnce(float magnification)
-        {
-            if (!onceGroupEnabled) return;
-
-            //動作中で上書き不可ならば return
-            if (OnceIsProcessing && !overrideOnce) return;
-
-            StopOnce();
-
-            //振幅倍率
-            onceParameter.magnification = magnification;
-
-            foreach (BlendShapeJitterHelper h in helperList)
-            {
-                //再生終了時にループ再生していない場合、初期化
-                var routine = StartCoroutine(OnceCoroutine(h.onceState, StopOnce));
-                onceRoutineList.Add(routine);
-            }
-        }
-
-        /// <summary>
-        /// 1周再生停止
-        /// </summary>
-        public void StopOnce()
-        {
-            ResetRoutineList(onceRoutineList);
-            ResetAllOnceState();
-
-            SetMorphWeight();
-        }
-
         #endregion
 
-        /// <summary>
-        /// 全再生停止 & 初期化
-        /// </summary>
-        public override void Initialize()
-        {
-            ResetRoutineList(loopRoutineList);
-            ResetAllLoopState();
-
-            ResetRoutineList(onceRoutineList);
-            ResetAllOnceState();
-
-            SetMorphWeight();
-        }
 
         #region Inspector拡張
 #if UNITY_EDITOR
@@ -196,6 +93,7 @@ namespace MYB.Jitter
         [CustomEditor(typeof(BlendShapeJitter))]
         public class BlendShapeJitterEditor : Editor
         {
+            SerializedProperty playOnAwakeProperty;
             SerializedProperty syncProperty;
             SerializedProperty overrideOnceProperty;
             SerializedProperty helperListProperty;
@@ -210,6 +108,7 @@ namespace MYB.Jitter
             {
                 var self = target as BlendShapeJitter;
 
+                playOnAwakeProperty = serializedObject.FindProperty("playOnAwake");
                 syncProperty = serializedObject.FindProperty("sync");
                 overrideOnceProperty = serializedObject.FindProperty("overrideOnce");
                 helperListProperty = serializedObject.FindProperty("helperList");
@@ -286,6 +185,8 @@ namespace MYB.Jitter
                     return;
                 }
 
+                playOnAwakeProperty.boolValue = EditorGUILayout.Toggle(playOnAwakeProperty.displayName, playOnAwakeProperty.boolValue);
+
                 //sync
                 EditorGUI.BeginDisabledGroup(EditorApplication.isPlaying);
                 syncProperty.boolValue = EditorGUILayout.Toggle(syncProperty.displayName, syncProperty.boolValue);
@@ -335,13 +236,15 @@ namespace MYB.Jitter
                 {
                     EditorGUI.BeginDisabledGroup(EditorApplication.isPlaying);
                     if (GUILayout.Button("Get Main", GUILayout.Width(100))) self.GetMainMorph();
-                    if (GUILayout.Button("Get Exclusive", GUILayout.Width(100))) self.GetDampMorph();
+                    if (GUILayout.Button("Get Damper", GUILayout.Width(100))) self.GetDampMorph();
                     EditorGUI.EndDisabledGroup();
 
                     GUILayout.FlexibleSpace();
 
-                    EditorGUI.BeginDisabledGroup(!EditorApplication.isPlaying | !self.onceGroupEnabled);
-                    if (GUILayout.Button("Play Once", GUILayout.Width(100))) self.PlayOnce();
+                    EditorGUI.BeginDisabledGroup(!EditorApplication.isPlaying);
+                    if (GUILayout.Button("Fadein", GUILayout.Width(60))) self.FadeIn(3f);
+                    if (GUILayout.Button("Fadeout", GUILayout.Width(60))) self.FadeOut(3f);
+                    if (GUILayout.Button("Play Once", GUILayout.Width(80))) self.PlayOnce();
                     EditorGUI.EndDisabledGroup();
                 }
                 EditorGUILayout.EndHorizontal();

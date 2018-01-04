@@ -13,6 +13,7 @@ namespace MYB.Jitter
         public Transform target;
         public UpdateMode updateMode = UpdateMode.Reference;
         public Vector3 referencePosition;
+        public bool playOnAwake = true;
         public bool syncAxis = false;
         public bool overrideOnce;
         public float magnification = 1f;
@@ -34,9 +35,8 @@ namespace MYB.Jitter
         };
         
         protected Vector2 amplitudeMagnification = Vector2.one;    //振幅倍率 x:Loop y:Once
-        protected List<Coroutine> loopRoutineList = new List<Coroutine>();
-        protected List<Coroutine> onceRoutineList = new List<Coroutine>();
-        protected Coroutine fadeInRoutine, fadeOutRoutine;
+        protected PlayState playState = PlayState.Stop;
+        protected float fadeSpeed = 1f;
 
         //Editor用
         public string[] axisLabel = { "--- X ---", "--- Y ---", "--- Z ---" };
@@ -95,35 +95,6 @@ namespace MYB.Jitter
             SearchParent();
         }
 
-        void Awake()
-        {
-            if (target == null) return;
-            
-            if (!isChild)
-            {
-                referencePosition = target.localPosition;
-
-                children = target.GetComponentsInChildren<PositionJitter>()
-                    .Where(x => x.target == this.target)
-                    .Where(x => x.GetInstanceID() != this.GetInstanceID())
-                    .ToList();
-            }
-
-            //helperList初期化 (syncAxis ? 1 : 3)個インスタンス化
-            for (int i = 0; i < (syncAxis ? 1 : 3); i++)
-            {
-                helperList.Add(new JitterHelper(loopParameter[i], onceParameter[i]));
-            }
-        }
-
-        void LateUpdate()
-        {
-            if (isChild) return;
-            if (!isProcessing) return;
-
-            SetPosition();
-        }
-
         //Editor変更時
         protected void OnValidate()
         {
@@ -148,6 +119,85 @@ namespace MYB.Jitter
                 param.AdjustParameter();
         }
 
+        void Awake()
+        {
+            if (target == null) return;
+            
+            if (!isChild)
+            {
+                referencePosition = target.localPosition;
+
+                children = target.GetComponentsInChildren<PositionJitter>()
+                    .Where(x => x.target == this.target)
+                    .Where(x => x.GetInstanceID() != this.GetInstanceID())
+                    .ToList();
+            }
+
+            //helperList初期化 (syncAxis ? 1 : 3)個インスタンス化
+            for (int i = 0; i < (syncAxis ? 1 : 3); i++)
+            {
+                helperList.Add(new JitterHelper(loopParameter[i], onceParameter[i]));
+            }
+
+            if (!isChild && playOnAwake)
+                _PlayLoop(PlayState.Play, 1f);
+        }
+
+        void LateUpdate()
+        {
+            UpdateOnce();
+            if (isChild) return;
+
+            UpdateLoop();
+            UpdateFade();
+            SetPosition();
+        }
+
+        protected void UpdateLoop()
+        {
+            if (!loopGroupEnabled || playState == PlayState.Stop) return;
+
+            foreach (JitterHelper h in helperList)
+            {
+                h.loopState.UpdateLoop();
+            }
+        }
+
+        protected void UpdateOnce()
+        {
+            if (!onceGroupEnabled) return;
+
+            foreach (JitterHelper h in helperList)
+            {
+                if (h.onceState.isProcessing)
+                    h.onceState.UpdateOnce(StopOnce);
+            }
+        }
+
+        protected void UpdateFade()
+        {
+            switch (playState)
+            {
+                case PlayState.Fadein:
+                    amplitudeMagnification.x += Time.deltaTime * fadeSpeed;
+                    if (amplitudeMagnification.x > 1f)
+                    {
+                        amplitudeMagnification.x = 1f;
+                        playState = PlayState.Play;
+                    }
+                    break;
+                case PlayState.Fadeout:
+                    amplitudeMagnification.x -= Time.deltaTime * fadeSpeed;
+                    if (amplitudeMagnification.x < 0f)
+                    {
+                        amplitudeMagnification.x = 0f;
+                        playState = PlayState.Stop;
+                        StopLoop();
+                    }
+                    break;
+            }
+        }
+        
         //target変更時に親を探す
         protected void SearchParent()
         {
@@ -212,9 +262,7 @@ namespace MYB.Jitter
 
         protected void ResetPosition()
         {
-#if UNITY_EDITOR
-            if (EditorApplication.isPlaying)
-#endif
+            if (Application.isPlaying)
                 target.localPosition = referencePosition;
         }
 
@@ -242,111 +290,66 @@ namespace MYB.Jitter
             return vec;
         }
 
-        /// <summary>
-        /// ループ再生用コルーチン
-        /// </summary>
-        /// <param name="state"></param>
-        /// <returns></returns>
-        protected IEnumerator LoopCoroutine(JitterHelper.State state)
+        protected void _PlayLoop(PlayState state, float magnification)
         {
-            while (true)
+            if (!loopGroupEnabled) return;
+
+            if (isProcessing)
+                StopLoop();
+
+            playState = state;
+            //振幅倍率 x:Loop
+            this.amplitudeMagnification.x = magnification;
+        }
+
+        public override void StopLoop()
+        {
+            ResetAllLoopState();
+
+            if (!isProcessing) ResetPosition();
+        }
+
+        protected void _PlayOnce(float magnification)
+        {
+            if (!onceGroupEnabled) return;
+
+            //動作中で上書き不可ならば return
+            if (OnceIsProcessing && !overrideOnce) return;
+
+            StopOnce();
+
+            //振幅倍率 y:Once
+            this.amplitudeMagnification.y = magnification;
+
+            foreach (JitterHelper h in helperList)
             {
-                state.isProcessing = true;
-
-                state.SetNextParameter();
-
-                state.timer = 0f;
-
-                //各軸isEnabled = falseの間は再生停止
-                var param = state.param;
-                if (!param.isEnabled && !param.isXAxis && param.syncAxis)
-                {
-                    state.isProcessing = false;
-                    while (!param.isEnabled)
-                    {
-                        yield return null;
-                    }
-                    state.isProcessing = true;
-                }
-
-                //Period
-                while (state.timer < 1f)
-                {
-                    state.timer += Time.deltaTime / state.GetCurrentPeriod();
-                    yield return null;
-                }
+                h.onceState.SetOnceParameter();
+                h.onceState.isProcessing = true;
             }
+        }
+
+        public void StopOnce()
+        {
+            ResetAllOnceState();
+            if (!isProcessing) ResetPosition();
         }
 
         /// <summary>
-        /// 1周再生用コルーチン
+        /// 全再生停止 & 初期化
         /// </summary>
-        protected IEnumerator OnceCoroutine(JitterHelper.State state)
+        public override void Initialize()
         {
-            if (!onceGroupEnabled) yield break;
-
-            state.isProcessing = true;
-
-            state.SetOnceParameter();
-
-            state.timer = 0f;
-
-            //Period
-            while (state.timer < 1f)
-            {
-                state.timer += Time.deltaTime / state.GetCurrentPeriod();
-                yield return null;
-            }
-
-            //Interval
-            float intervalTimer = 0f;
-            while (intervalTimer < state.curInterval)
-            {
-                intervalTimer += Time.deltaTime;
-                yield return null;
-            }
-
-            state.timer = 0f;
-            yield return null;
-            state.isProcessing = false;
-        }
-
-        protected IEnumerator FadeInCoroutine(float sec)
-        {
-            sec = Mathf.Max(0.01f, sec);
-
-            while (amplitudeMagnification.x < 1f)
-            {
-                amplitudeMagnification.x += Time.deltaTime / sec;
-                yield return null;
-            }
-            amplitudeMagnification.x = 1f;
-            fadeInRoutine = null;
-        }
-
-        protected IEnumerator FadeOutCoroutine(float sec, System.Action callback)
-        {
-            sec = Mathf.Max(0.01f, sec);
-
-            while (amplitudeMagnification.x > 0f)
-            {
-                amplitudeMagnification.x -= Time.deltaTime / sec;
-                yield return null;
-            }
-            amplitudeMagnification.x = 0f;
-            fadeOutRoutine = null;
-            loopGroupEnabled = false;
-            callback();
+            ResetAllLoopState();
+            ResetAllOnceState();
+            ResetPosition();
         }
 
         public override void FadeIn(float second) { }
         public override void FadeOut(float second) { }
-        public override void Initialize() { }
         public override void PlayLoop() { }
         public override void PlayLoop(float magnification) { }
         public override void PlayOnce() { }
         public override void PlayOnce(float magnification) { }
-        public override void StopLoop() { }
 
 #if UNITY_EDITOR
         //Inspector拡張クラス

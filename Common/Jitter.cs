@@ -6,6 +6,14 @@ namespace MYB.Jitter
 {
     abstract public class Jitter : MonoBehaviour
     {
+        public enum PlayState
+        {
+            Stop,
+            Fadein,
+            Play,
+            Fadeout,
+        }
+
         abstract public void FadeIn(float second);
         abstract public void FadeOut(float second);
         abstract public void Initialize();

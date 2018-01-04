@@ -12,13 +12,6 @@ namespace MYB.Jitter
     /// </summary>
     public class PositionJitter : PositionJitImpl
     {
-        void OnEnable()
-        {
-            if (target == null) return;
-
-            PlayLoop();
-        }
-
         void OnDisable()
         {
             if (target == null) return;
@@ -32,7 +25,7 @@ namespace MYB.Jitter
         /// </summary>
         public override void PlayLoop()
         {
-            _PlayLoop(1f);
+            _PlayLoop(PlayState.Play, 1f);
         }
 
         /// <summary>
@@ -40,18 +33,7 @@ namespace MYB.Jitter
         /// </summary>
         public override void PlayLoop(float magnification)
         {
-            _PlayLoop(magnification);
-        }
-
-        /// <summary>
-        /// ループ再生停止
-        /// </summary>
-        public override void StopLoop()
-        {
-            ResetRoutineList(loopRoutineList);
-            ResetAllLoopState();
-
-            if (!isProcessing) ResetPosition();
+            _PlayLoop(PlayState.Play, magnification);
         }
 
         /// <summary>
@@ -60,19 +42,13 @@ namespace MYB.Jitter
         /// <param name="second">フェード時間</param>
         public override void FadeIn(float second)
         {
-            if (fadeInRoutine != null) return;
-            if (fadeOutRoutine != null)
-            {
-                StopCoroutine(fadeOutRoutine);
-                fadeOutRoutine = null;
-            }
-            if (!loopGroupEnabled)
-            {
-                loopGroupEnabled = true;
-                _PlayLoop(0f);
-            }
+            if (playState == PlayState.Play ||
+                playState == PlayState.Fadein) return;
 
-            fadeInRoutine = StartCoroutine(FadeInCoroutine(second));
+            playState = PlayState.Fadein;
+            fadeSpeed = 1f / Mathf.Max(0.01f, second);
+
+            _PlayLoop(PlayState.Fadein, 0f);
         }
 
         /// <summary>
@@ -81,33 +57,12 @@ namespace MYB.Jitter
         /// <param name="second">フェード時間</param>
         public override void FadeOut(float second)
         {
-            if (fadeOutRoutine != null) return;
+            if (playState == PlayState.Stop) return;
 
-            if (fadeInRoutine != null)
-            {
-                StopCoroutine(fadeInRoutine);
-                fadeInRoutine = null;
-            }
-
-            fadeOutRoutine = StartCoroutine(FadeOutCoroutine(second, StopLoop));
+            playState = PlayState.Fadeout;
+            fadeSpeed = 1f / Mathf.Max(0.01f, second);
         }
-
-        public void _PlayLoop(float magnification)
-        {
-            if (isProcessing) StopLoop();
-
-            //振幅倍率 x:Loop
-            this.amplitudeMagnification.x = magnification;
-
-            if (!loopGroupEnabled) return;
-
-            foreach (JitterHelper h in helperList)
-            {
-                var routine = StartCoroutine(LoopCoroutine(h.loopState));
-                loopRoutineList.Add(routine);
-            }
-        }
-
+        
         #endregion
 
         #region ********** ONCE ***********
@@ -126,52 +81,7 @@ namespace MYB.Jitter
         {
             _PlayOnce(magnification);
         }
-
-        public void _PlayOnce(float magnification)
-        {
-            if (!onceGroupEnabled) return;
-
-            //動作中で上書き不可ならば return
-            if (OnceIsProcessing && !overrideOnce) return;
-
-            StopOnce();
-
-            //振幅倍率 y:Once
-            this.amplitudeMagnification.y = magnification;
-
-            foreach (JitterHelper h in helperList)
-            {
-                //再生終了時にループ再生していない場合、初期化
-                var routine = StartCoroutine(OnceCoroutine(h.onceState));
-                onceRoutineList.Add(routine);
-            }
-        }
-
-        /// <summary>
-        /// 1周再生停止
-        /// </summary>
-        public void StopOnce()
-        {
-            ResetRoutineList(onceRoutineList);
-            ResetAllOnceState();
-
-            if (!isProcessing) ResetPosition();
-        }
         #endregion
-
-        /// <summary>
-        /// 全再生停止 & 初期化
-        /// </summary>
-        public override void Initialize()
-        {
-            ResetRoutineList(loopRoutineList);
-            ResetAllLoopState();
-
-            ResetRoutineList(onceRoutineList);
-            ResetAllOnceState();
-
-            ResetPosition();
-        }
 
         #region Inspector拡張
 #if UNITY_EDITOR
@@ -181,6 +91,7 @@ namespace MYB.Jitter
         {
             SerializedProperty updateModeProperty;
             SerializedProperty referencePositionProperty;
+            SerializedProperty playOnAwakeProperty;
             SerializedProperty syncAxisProperty;
             SerializedProperty overrideOnceProperty;
             SerializedProperty magnificationProperty;
@@ -191,6 +102,7 @@ namespace MYB.Jitter
             {
                 updateModeProperty = serializedObject.FindProperty("updateMode");
                 referencePositionProperty = serializedObject.FindProperty("referencePosition");
+                playOnAwakeProperty = serializedObject.FindProperty("playOnAwake");
                 syncAxisProperty = serializedObject.FindProperty("syncAxis");
                 overrideOnceProperty = serializedObject.FindProperty("overrideOnce");
                 magnificationProperty = serializedObject.FindProperty("magnification");
@@ -244,6 +156,10 @@ namespace MYB.Jitter
                 //Reference
                 if (!self.isChild && updateMode == UpdateMode.Reference)
                     referencePositionProperty.vector3Value = EditorGUILayout.Vector3Field(referencePositionProperty.displayName, referencePositionProperty.vector3Value);
+
+                //PlayOnAwake
+                if (!self.isChild)
+                    playOnAwakeProperty.boolValue = EditorGUILayout.Toggle(playOnAwakeProperty.displayName, playOnAwakeProperty.boolValue);
 
                 //sync Axis
                 EditorGUI.BeginDisabledGroup(EditorApplication.isPlaying);
@@ -322,9 +238,12 @@ namespace MYB.Jitter
                         GUILayout.FlexibleSpace();
 
                         EditorGUI.BeginDisabledGroup(!EditorApplication.isPlaying);
+                        if (!self.isChild)
                         {
-                            if (GUILayout.Button("Play Once", GUILayout.Width(100))) self.PlayOnce();
+                            if (GUILayout.Button("Fadein", GUILayout.Width(60))) self.FadeIn(3f);
+                            if (GUILayout.Button("Fadeout", GUILayout.Width(60))) self.FadeOut(3f);
                         }
+                        if (GUILayout.Button("Play Once", GUILayout.Width(100))) self.PlayOnce();
                         EditorGUI.EndDisabledGroup();
                     }
                     EditorGUILayout.EndHorizontal();

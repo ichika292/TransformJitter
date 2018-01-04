@@ -11,40 +11,24 @@ namespace MYB.Jitter
     public class BlendShapeJitterImpl : Jitter
     {
         public SkinnedMeshRenderer skinnedMeshRenderer;
+        public bool playOnAwake = true;
         public bool sync;
         public bool overrideOnce;
+        
         public List<BlendShapeJitterHelper> helperList = new List<BlendShapeJitterHelper>();
         public List<BlendShapeJitterDamper> damperList = new List<BlendShapeJitterDamper>();
-
+        
         public BlendShapeJitterParameter loopParameter = new BlendShapeJitterParameter(PrimitiveAnimationCurve.UpDown5, true);
         public BlendShapeJitterParameter onceParameter = new BlendShapeJitterParameter(PrimitiveAnimationCurve.UpDown1, false);
-
-        protected List<Coroutine> loopRoutineList = new List<Coroutine>();
-        protected List<Coroutine> onceRoutineList = new List<Coroutine>();
-        protected Coroutine fadeInRoutine, fadeOutRoutine;
+        
+        protected PlayState playState = PlayState.Stop;
+        protected float fadeSpeed = 1f;
 
         //Editor用
         public bool loopGroupEnabled = true;
         public bool onceGroupEnabled = true;
 
-        //コルーチンが動作中か否か
-        public bool isProcessing
-        {
-            get {
-                bool result = false;
-                foreach (BlendShapeJitterHelper h in helperList)
-                {
-                    if (h.isProcessing)
-                    {
-                        result = true;
-                        break;
-                    }
-                }
-                return result;
-            }
-        }
-
-        //Onceコルーチンが動作中か否か
+        //Once再生中か否か
         public bool OnceIsProcessing
         {
             get {
@@ -69,11 +53,18 @@ namespace MYB.Jitter
                 Debug.Log("SkinnedMeshRenderer not found.");
                 return;
             }
-            if(skinnedMeshRenderer.sharedMesh.blendShapeCount == 0)
+            if (skinnedMeshRenderer.sharedMesh.blendShapeCount == 0)
             {
                 Debug.Log("BlendShapes not found.");
                 return;
             }
+        }
+
+        protected void OnValidate()
+        {
+            loopParameter.AdjustParameter();
+            SetMainMorphName();
+            SetDampMorphName();
         }
 
         void Awake()
@@ -83,13 +74,62 @@ namespace MYB.Jitter
 
             foreach (BlendShapeJitterDamper d in damperList)
                 d.Initialize(this);
+
+            if (playOnAwake)
+                _PlayLoop(PlayState.Play, 1f);
         }
 
         void Update()
         {
-            if (!isProcessing) return;
-
+            UpdateLoop();
+            UpdateOnce();
+            UpdateFade();
             SetMorphWeight();
+        }
+
+        protected void UpdateLoop()
+        {
+            if (!loopGroupEnabled || playState == PlayState.Stop) return;
+
+            foreach (BlendShapeJitterHelper h in helperList)
+            {
+                h.loopState.UpdateLoop();
+            }
+        }
+
+        protected void UpdateOnce()
+        {
+            if (!onceGroupEnabled) return;
+
+            foreach (BlendShapeJitterHelper h in helperList)
+            {
+                if (h.onceState.isProcessing)
+                    h.onceState.UpdateOnce(StopOnce);
+            }
+        }
+
+        protected void UpdateFade()
+        {
+            switch (playState)
+            {
+                case PlayState.Fadein:
+                    loopParameter.magnification += Time.deltaTime * fadeSpeed;
+                    if (loopParameter.magnification > 1f)
+                    {
+                        loopParameter.magnification = 1f;
+                        playState = PlayState.Play;
+                    }
+                    break;
+                case PlayState.Fadeout:
+                    loopParameter.magnification -= Time.deltaTime * fadeSpeed;
+                    if (loopParameter.magnification < 0f)
+                    {
+                        loopParameter.magnification = 0f;
+                        playState = PlayState.Stop;
+                        StopLoop();
+                    }
+                    break;
+            }
         }
 
         protected void SetMorphWeight()
@@ -115,14 +155,6 @@ namespace MYB.Jitter
                         h.SetMorphWeight();
                 }
             }
-        }
-
-        //Editor変更時
-        protected void OnValidate()
-        {
-            loopParameter.AdjustParameter();
-            SetMainMorphName();
-            SetDampMorphName();
         }
 
         protected void ResetRoutineList(List<Coroutine> list)
@@ -168,7 +200,7 @@ namespace MYB.Jitter
             if (helperList.Count() == 0)
                 Debug.Log("BlendShape (Weight > 0) not found.");
         }
-        
+
         protected void GetDampMorph()
         {
             if (skinnedMeshRenderer.sharedMesh.blendShapeCount == 0) return;
@@ -203,121 +235,71 @@ namespace MYB.Jitter
                 d.SetMorphName();
         }
 
-        /// <summary>
-        /// ループ再生用コルーチン
-        /// </summary>
-        /// <param name="state"></param>
-        /// <returns></returns>
-        protected IEnumerator LoopCoroutine(BlendShapeJitterHelper.State state)
+        protected void _PlayLoop(PlayState state, float magnification)
         {
-            while (true)
+            if (helperList.Count == 0) return;
+            if (!loopGroupEnabled) return;
+
+            StopLoop();
+
+            playState = state;
+            loopParameter.magnification = magnification;
+        }
+
+        /// <summary>
+        /// ループ再生停止
+        /// </summary>
+        public override void StopLoop()
+        {
+            ResetAllLoopState();
+            SetMorphWeight();
+        }
+
+        protected void _PlayOnce(float magnification)
+        {
+            if (!onceGroupEnabled) return;
+
+            //動作中で上書き不可ならば return
+            if (OnceIsProcessing && !overrideOnce) return;
+
+            StopOnce();
+
+            //振幅倍率
+            onceParameter.magnification = magnification;
+
+            foreach (BlendShapeJitterHelper h in helperList)
             {
-                state.isProcessing = true;
-                
-                state.SetNextParameter();
-
-                state.timer = 0f;
-
-                //loopGroupEnabled = falseの間は再生停止
-                if (!loopGroupEnabled)
-                {
-                    state.isProcessing = false;
-                    while (!loopGroupEnabled)
-                    {
-                        yield return null;
-                    }
-                    state.isProcessing = true;
-                }
-
-                //Period
-                while (state.timer < 1f)
-                {
-                    state.timer += Time.deltaTime / state.GetCurrentPeriod();
-                    yield return null;
-                }
-
-                //Interval
-                float intervalTimer = 0f;
-                while (intervalTimer < state.curInterval)
-                {
-                    intervalTimer += Time.deltaTime;
-                    yield return null;
-                }
+                h.onceState.SetOnceParameter();
+                h.onceState.isProcessing = true;
             }
         }
 
         /// <summary>
-        /// 1周再生用コルーチン
+        /// 1周再生停止
         /// </summary>
-        protected IEnumerator OnceCoroutine(BlendShapeJitterHelper.State state, System.Action callback)
+        protected void StopOnce()
         {
-            if (!onceGroupEnabled) yield break;
-
-            state.isProcessing = true;
-            
-            state.SetOnceParameter();
-
-            state.timer = 0f;
-
-            //Period
-            while (state.timer < 1f)
-            {
-                state.timer += Time.deltaTime / state.GetCurrentPeriod();
-                yield return null;
-            }
-
-            //Interval
-            float intervalTimer = 0f;
-            while (intervalTimer < state.curInterval)
-            {
-                intervalTimer += Time.deltaTime;
-                yield return null;
-            }
-
-            state.timer = 0f;
-            yield return null;
-            state.isProcessing = false;
-
-            if (!isProcessing) callback();
+            ResetAllOnceState();
+            SetMorphWeight();
         }
 
-        protected IEnumerator FadeInCoroutine(float sec)
+        /// <summary>
+        /// 全再生停止 & 初期化
+        /// </summary>
+        public override void Initialize()
         {
-            sec = Mathf.Max(0.01f, sec);
-
-            while (loopParameter.magnification < 1f)
-            {
-                loopParameter.magnification += Time.deltaTime / sec;
-                yield return null;
-            }
-            loopParameter.magnification = 1f;
-            fadeInRoutine = null;
+            ResetAllLoopState();
+            ResetAllOnceState();
+            SetMorphWeight();
         }
 
-        protected IEnumerator FadeOutCoroutine(float sec, System.Action callback)
-        {
-            sec = Mathf.Max(0.01f, sec);
-
-            while (loopParameter.magnification > 0f)
-            {
-                loopParameter.magnification -= Time.deltaTime / sec;
-                yield return null;
-            }
-            loopParameter.magnification = 0f;
-            fadeOutRoutine = null;
-            loopGroupEnabled = false;
-            callback();
-        }
-        
         public override void FadeIn(float second) { }
         public override void FadeOut(float second) { }
-        public override void Initialize() { }
         public override void PlayLoop() { }
         public override void PlayLoop(float magnification) { }
         public override void PlayOnce() { }
         public override void PlayOnce(float magnification) { }
-        public override void StopLoop() { }
-        
+
 #if UNITY_EDITOR
         [CustomEditor(typeof(BlendShapeJitterImpl))]
         public class BlendShapeJitterImplEditor : Editor
