@@ -102,14 +102,19 @@ namespace MYB.Jitter
             preMinOffset = offset.min;
         }
 
-        public void Copy(JitterParameterBase input)
+        public void CopyFrom(JitterParameterBase input, bool CopyFully = false)
         {
-            period.Copy(input.period);
-            interval.Copy(input.interval);
-            amplitude.Copy(input.amplitude);
-            offset.Copy(input.offset);
+            period.CopyFrom(input.period);
+            interval.CopyFrom(input.interval);
+            amplitude.CopyFrom(input.amplitude);
+            offset.CopyFrom(input.offset);
             blendNextPeriod = input.blendNextPeriod;
             blendNextAmplitude = input.blendNextAmplitude;
+
+            if (CopyFully)
+            {
+                periodToAmplitude = new AnimationCurve(input.periodToAmplitude.keys);
+            }
         }
     }
 }

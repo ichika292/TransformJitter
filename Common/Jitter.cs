@@ -14,13 +14,13 @@ namespace MYB.Jitter
             Fadeout,
         }
 
-        abstract public void FadeIn(float second);
-        abstract public void FadeOut(float second);
-        abstract public void Initialize();
-        abstract public void PlayLoop();
-        abstract public void PlayLoop(float magnification);
-        abstract public void PlayOnce();
-        abstract public void PlayOnce(float magnification);
-        abstract public void StopLoop();
+        public abstract void FadeIn(float second);
+        public abstract void FadeOut(float second);
+        public abstract void Initialize();
+        public abstract void PlayLoop();
+        public abstract void PlayLoop(float magnification);
+        public abstract void PlayOnce();
+        public abstract void PlayOnce(float magnification);
+        public abstract void StopLoop();
     }
 }

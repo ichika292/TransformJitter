@@ -14,19 +14,19 @@ namespace MYB.Jitter
         public bool playOnAwake = true;
         public bool sync;
         public bool overrideOnce;
-        
-        public List<BlendShapeJitterHelper> helperList = new List<BlendShapeJitterHelper>();
-        public List<BlendShapeJitterDamper> damperList = new List<BlendShapeJitterDamper>();
-        
-        public BlendShapeJitterParameter loopParameter = new BlendShapeJitterParameter(PrimitiveAnimationCurve.UpDown5, true);
-        public BlendShapeJitterParameter onceParameter = new BlendShapeJitterParameter(PrimitiveAnimationCurve.UpDown1, false);
-        
-        protected PlayState playState = PlayState.Stop;
-        protected float fadeSpeed = 1f;
-
-        //Editor用
         public bool loopGroupEnabled = true;
         public bool onceGroupEnabled = true;
+
+        public BlendShapeJitterParameter loopParameter = new BlendShapeJitterParameter(PrimitiveAnimationCurve.UpDown5, true);
+        public BlendShapeJitterParameter onceParameter = new BlendShapeJitterParameter(PrimitiveAnimationCurve.UpDown1, false);
+
+        public List<BlendShapeJitterHelper> helperList = new List<BlendShapeJitterHelper>();
+        public List<BlendShapeJitterDamper> damperList = new List<BlendShapeJitterDamper>();
+
+        protected PlayState playState = PlayState.Stop;
+        protected float fadeSpeed = 1f;
+        
+        public BlendShapeJitterAsset asset;
 
         //Once再生中か否か
         public bool OnceIsProcessing
@@ -78,7 +78,7 @@ namespace MYB.Jitter
             if (playOnAwake)
                 _PlayLoop(PlayState.Play, 1f);
         }
-
+        
         void Update()
         {
             UpdateLoop();
@@ -226,13 +226,13 @@ namespace MYB.Jitter
         protected void SetMainMorphName()
         {
             foreach (BlendShapeJitterHelper h in helperList)
-                h.SetMorphName();
+                h.SetMorphName(this);
         }
 
         protected void SetDampMorphName()
         {
             foreach (BlendShapeJitterDamper d in damperList)
-                d.SetMorphName();
+                d.SetMorphName(this);
         }
 
         protected void _PlayLoop(PlayState state, float magnification)
@@ -299,6 +299,66 @@ namespace MYB.Jitter
         public override void PlayLoop(float magnification) { }
         public override void PlayOnce() { }
         public override void PlayOnce(float magnification) { }
+
+        public void Import()
+        {
+            if (asset == null)
+            {
+                AssetNotFound();
+                return;
+            }
+
+            playOnAwake = asset.playOnAwake;
+            sync = asset.sync;
+            overrideOnce = asset.overrideOnce;
+            loopGroupEnabled = asset.loopGroupEnabled;
+            onceGroupEnabled = asset.onceGroupEnabled;
+            loopParameter.CopyFrom(asset.loopParameter);
+            loopParameter.AdjustParameter();
+            onceParameter.CopyFrom(asset.onceParameter);
+            onceParameter.AdjustParameter();
+
+            helperList.Clear();
+            foreach (BlendShapeJitterHelper h in asset.helperList)
+                helperList.Add(h.Instantiate());
+            
+            damperList.Clear();
+            foreach (BlendShapeJitterDamper d in asset.damperList)
+                damperList.Add(d.Instantiate());
+
+            SetMainMorphName();
+            SetDampMorphName();
+        }
+
+        public void Export()
+        {
+            if (asset == null)
+            {
+                AssetNotFound();
+                return;
+            }
+
+            asset.playOnAwake = playOnAwake;
+            asset.sync = sync;
+            asset.overrideOnce = overrideOnce;
+            asset.loopGroupEnabled = loopGroupEnabled;
+            asset.onceGroupEnabled = onceGroupEnabled;
+            asset.loopParameter.CopyFrom(loopParameter);
+            asset.onceParameter.CopyFrom(onceParameter);
+
+            asset.helperList.Clear();
+            foreach (BlendShapeJitterHelper h in helperList)
+                asset.helperList.Add(h.Instantiate());
+
+            asset.damperList.Clear();
+            foreach (BlendShapeJitterDamper d in damperList)
+                asset.damperList.Add(d.Instantiate());
+        }
+        
+        void AssetNotFound()
+        {
+            Debug.LogWarning("Asset not found. Create at Assets/Create/Jitter/BlendShapeJitterAsset");
+        }
 
 #if UNITY_EDITOR
         [CustomEditor(typeof(BlendShapeJitterImpl))]

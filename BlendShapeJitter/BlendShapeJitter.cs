@@ -163,7 +163,7 @@ namespace MYB.Jitter
                     EditorGUI.PropertyField(rect, element);
                 };
 
-                helperReorderableList.onAddCallback = (list) =>
+                damperReorderableList.onAddCallback = (list) =>
                 {
                     self.damperList.Add(new BlendShapeJitterDamper(self, -1, "", 0.5f));
                     list.index = damperListProperty.arraySize;
@@ -231,12 +231,12 @@ namespace MYB.Jitter
                 //Exclusive List
                 damperReorderableList.DoLayoutList();
 
-                //MecanimModelからWeight>0のモーフを取得
+                //Button
                 EditorGUILayout.BeginHorizontal();
                 {
                     EditorGUI.BeginDisabledGroup(EditorApplication.isPlaying);
-                    if (GUILayout.Button("Get Main", GUILayout.Width(100))) self.GetMainMorph();
-                    if (GUILayout.Button("Get Damper", GUILayout.Width(100))) self.GetDampMorph();
+                    if (GUILayout.Button("Get Main", GUILayout.Width(80))) self.GetMainMorph();
+                    if (GUILayout.Button("Get Damper", GUILayout.Width(80))) self.GetDampMorph();
                     EditorGUI.EndDisabledGroup();
 
                     GUILayout.FlexibleSpace();
@@ -246,6 +246,20 @@ namespace MYB.Jitter
                     if (GUILayout.Button("Fadeout", GUILayout.Width(60))) self.FadeOut(3f);
                     if (GUILayout.Button("Play Once", GUILayout.Width(80))) self.PlayOnce();
                     EditorGUI.EndDisabledGroup();
+                }
+                EditorGUILayout.EndHorizontal();
+
+                GUILayout.Box("", GUILayout.ExpandWidth(true), GUILayout.Height(1));
+
+                EditorGUILayout.BeginHorizontal();
+                {
+                    self.asset = (BlendShapeJitterAsset)EditorGUILayout.ObjectField(self.asset, typeof(BlendShapeJitterAsset), false);
+
+                    EditorGUI.BeginDisabledGroup(EditorApplication.isPlaying);
+                    if (GUILayout.Button("Import", GUILayout.Width(60))) self.Import();
+                    if (GUILayout.Button("Export", GUILayout.Width(60))) self.Export();
+                    EditorGUI.EndDisabledGroup();
+
                 }
                 EditorGUILayout.EndHorizontal();
 

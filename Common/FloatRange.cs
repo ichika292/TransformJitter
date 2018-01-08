@@ -40,7 +40,7 @@ namespace MYB.Jitter
             this.clampMax = clampMax;
         }
 
-        public void Copy(FloatRange input)
+        public void CopyFrom(FloatRange input)
         {
             min = input.min;
             max = input.max;

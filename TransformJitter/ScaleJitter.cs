@@ -89,7 +89,7 @@ namespace MYB.Jitter
         public class ScaleJitterEditor : Editor
         {
             SerializedProperty updateModeProperty;
-            SerializedProperty referenceScaleProperty;
+            SerializedProperty referenceProperty;
             SerializedProperty playOnAwakeProperty;
             SerializedProperty syncAxisProperty;
             SerializedProperty overrideOnceProperty;
@@ -100,7 +100,7 @@ namespace MYB.Jitter
             void OnEnable()
             {
                 updateModeProperty = serializedObject.FindProperty("updateMode");
-                referenceScaleProperty = serializedObject.FindProperty("referenceScale");
+                referenceProperty = serializedObject.FindProperty("reference");
                 playOnAwakeProperty = serializedObject.FindProperty("playOnAwake");
                 syncAxisProperty = serializedObject.FindProperty("syncAxis");
                 overrideOnceProperty = serializedObject.FindProperty("overrideOnce");
@@ -154,7 +154,7 @@ namespace MYB.Jitter
 
                 //Reference
                 if (!self.isChild && updateMode == UpdateMode.Reference)
-                    referenceScaleProperty.vector3Value = EditorGUILayout.Vector3Field(referenceScaleProperty.displayName, referenceScaleProperty.vector3Value);
+                    referenceProperty.vector3Value = EditorGUILayout.Vector3Field("Reference Scale", referenceProperty.vector3Value);
 
                 //PlayOnAwake
                 if (!self.isChild)
@@ -230,23 +230,38 @@ namespace MYB.Jitter
                         if (EditorGUI.EndChangeCheck()) self.OnValidate();
                     }
                     EditorGUI.indentLevel--;
-
-                    //Play Once
-                    EditorGUILayout.BeginHorizontal();
-                    {
-                        GUILayout.FlexibleSpace();
-
-                        EditorGUI.BeginDisabledGroup(!EditorApplication.isPlaying);
-                        if (!self.isChild)
-                        {
-                            if (GUILayout.Button("Fadein", GUILayout.Width(60))) self.FadeIn(3f);
-                            if (GUILayout.Button("Fadeout", GUILayout.Width(60))) self.FadeOut(3f);
-                        }
-                        if (GUILayout.Button("Play Once", GUILayout.Width(100))) self.PlayOnce();
-                        EditorGUI.EndDisabledGroup();
-                    }
-                    EditorGUILayout.EndHorizontal();
                 }
+
+                //Button
+                EditorGUILayout.BeginHorizontal();
+                {
+                    GUILayout.FlexibleSpace();
+
+                    EditorGUI.BeginDisabledGroup(!EditorApplication.isPlaying);
+                    if (!self.isChild)
+                    {
+                        if (GUILayout.Button("Fadein", GUILayout.Width(60))) self.FadeIn(3f);
+                        if (GUILayout.Button("Fadeout", GUILayout.Width(60))) self.FadeOut(3f);
+                    }
+                    if (GUILayout.Button("Play Once", GUILayout.Width(100))) self.PlayOnce();
+                    EditorGUI.EndDisabledGroup();
+                }
+                EditorGUILayout.EndHorizontal();
+
+                GUILayout.Box("", GUILayout.ExpandWidth(true), GUILayout.Height(1));
+
+                EditorGUILayout.BeginHorizontal();
+                {
+                    self.asset = (TransformJitterAsset)EditorGUILayout.ObjectField(self.asset, typeof(TransformJitterAsset), false);
+
+                    EditorGUI.BeginDisabledGroup(EditorApplication.isPlaying);
+                    if (GUILayout.Button("Import", GUILayout.Width(60))) self.Import();
+                    if (GUILayout.Button("Export", GUILayout.Width(60))) self.Export();
+                    EditorGUI.EndDisabledGroup();
+
+                }
+                EditorGUILayout.EndHorizontal();
+
                 serializedObject.ApplyModifiedProperties();
             }
         }

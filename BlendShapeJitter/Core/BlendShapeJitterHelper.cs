@@ -184,6 +184,18 @@ namespace MYB.Jitter
             this.weightMagnification = weightMagnification;
         }
 
+        public BlendShapeJitterHelper(int index, string name, float weightMagnification)
+        {
+            this.index = index;
+            this.name = name;
+            this.weightMagnification = weightMagnification;
+        }
+
+        public BlendShapeJitterHelper Instantiate()
+        {
+            return new BlendShapeJitterHelper(index, "", weightMagnification);
+        }
+
         public void Initialize(BlendShapeJitterImpl manager)
         {
             this.manager = manager;
@@ -217,8 +229,9 @@ namespace MYB.Jitter
             if (skinnedMeshRenderer == null) return;
 
             index = skinnedMeshRenderer.sharedMesh.GetBlendShapeIndex(name);
+            var newWeight = Mathf.Clamp(weight * weightMagnification, 0f, 100f);
             if (index >= 0)
-                skinnedMeshRenderer.SetBlendShapeWeight(index, weight * weightMagnification);
+                skinnedMeshRenderer.SetBlendShapeWeight(index, newWeight);
         }
 
         /// <summary>
@@ -237,7 +250,7 @@ namespace MYB.Jitter
         /// <param name="weight"></param>
         public void SetMorphWeight(float weight)
         {
-            this.weight = Mathf.Clamp01(weight);
+            this.weight = weight;
             UpdateMorph();
         }
         
@@ -270,9 +283,13 @@ namespace MYB.Jitter
             }
         }
         
-        public void SetMorphName()
+        public void SetMorphName(BlendShapeJitterImpl manager)
         {
-            name = manager.skinnedMeshRenderer.sharedMesh.GetBlendShapeName(index);
+            if (this.manager == null) Initialize(manager);
+
+            var sharedMesh = this.manager.skinnedMeshRenderer.sharedMesh;
+            index = Mathf.Min(index, sharedMesh.blendShapeCount - 1);
+            name = (index >= 0) ? sharedMesh.GetBlendShapeName(index) : "";
         }
     }
 

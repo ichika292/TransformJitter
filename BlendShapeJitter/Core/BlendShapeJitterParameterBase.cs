@@ -91,5 +91,17 @@ namespace MYB.Jitter
             preMaxOffset = offset.max;
             preMinOffset = offset.min;
         }
+
+        public void CopyFrom(BlendShapeJitterParameterBase input)
+        {
+            period.CopyFrom(input.period);
+            interval.CopyFrom(input.interval);
+            amplitude.CopyFrom(input.amplitude);
+            offset.CopyFrom(input.offset);
+            blendNextPeriod = input.blendNextPeriod;
+            blendNextAmplitude = input.blendNextAmplitude;
+
+            periodToAmplitude = new AnimationCurve(input.periodToAmplitude.keys);
+        }
     }
 }

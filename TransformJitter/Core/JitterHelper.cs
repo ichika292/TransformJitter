@@ -154,6 +154,11 @@ namespace MYB.Jitter
             onceState = new State(onceParameter);
         }
 
+        public JitterHelper Instantiate()
+        {
+            return new JitterHelper(loopState.param, onceState.param);
+        }
+
         public void ResetLoopState()
         {
             loopState.Reset();

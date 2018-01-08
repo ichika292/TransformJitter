@@ -20,15 +20,27 @@ namespace MYB.Jitter
 
         public BlendShapeJitterDamper(BlendShapeJitterImpl manager, int index, string name, float weightMagnification)
         {
+            this.index = index;
             this.name = name;
             this.weightMagnification = weightMagnification;
             Initialize(manager);
         }
 
+        public BlendShapeJitterDamper(int index, string name, float weightMagnification)
+        {
+            this.index = index;
+            this.name = name;
+            this.weightMagnification = weightMagnification;
+        }
+
+        public BlendShapeJitterDamper Instantiate()
+        {
+            return new BlendShapeJitterDamper(index, "", weightMagnification);
+        }
+
         public void Initialize(BlendShapeJitterImpl manager)
         {
             this.manager = manager;
-            index = manager.skinnedMeshRenderer.sharedMesh.GetBlendShapeIndex(name);
         }
 
         public float GetCurrentWeight()
@@ -38,9 +50,13 @@ namespace MYB.Jitter
             return weight * weightMagnification;
         }
 
-        public void SetMorphName()
+        public void SetMorphName(BlendShapeJitterImpl manager)
         {
-            name = manager.skinnedMeshRenderer.sharedMesh.GetBlendShapeName(index);
+            if(this.manager == null) Initialize(manager);
+
+            var sharedMesh = this.manager.skinnedMeshRenderer.sharedMesh;
+            index = Mathf.Min(index, sharedMesh.blendShapeCount - 1);
+            name = (index >= 0) ? sharedMesh.GetBlendShapeName(index) : "";
         }
     }
 
