@@ -10,7 +10,9 @@ namespace MYB.Jitter
     {
         //Editor用
         public bool isXAxis;
-        public bool syncAxis;
+        public bool syncPeriod;
+        public bool syncAmplitude;
+        public bool syncEasing;
 
         /// <summary>
         /// 波形生成用のプロパティ(再生中に変動しない)
@@ -61,7 +63,9 @@ namespace MYB.Jitter
                 bool isEnabled = property.FindPropertyRelative("isEnabled").boolValue;
                 bool isXAxis = property.FindPropertyRelative("isXAxis").boolValue;
                 bool loop = property.FindPropertyRelative("loop").boolValue;
-                bool syncAxis = property.FindPropertyRelative("syncAxis").boolValue;
+                bool syncPeriod = property.FindPropertyRelative("syncPeriod").boolValue;
+                bool syncAmplitude = property.FindPropertyRelative("syncAmplitude").boolValue;
+                bool syncEasing = property.FindPropertyRelative("syncEasing").boolValue;
 
                 //各プロパティー取得
                 var periodProperty = property.FindPropertyRelative("period");
@@ -73,39 +77,44 @@ namespace MYB.Jitter
                 var easingOffsetProperty = property.FindPropertyRelative("easingOffset");
 
                 position.height = EditorGUIUtility.singleLineHeight;
-                
-                if ((syncAxis && isXAxis) || (!syncAxis && isEnabled))
+
+                //Period Interval
+                if ((syncPeriod && isXAxis) || (!syncPeriod && isEnabled))
                 {
-                    //Period Interval
                     PutPropertyField(ref position, periodProperty);
                     if (!loop)
                         PutPropertyField(ref position, intervalProperty);
-                    //Amplitude Offset
+                }
+
+                //Amplitude Offset
+                if ((syncAmplitude && isXAxis) || (!syncAmplitude && isEnabled))
+                {
                     PutPropertyField(ref position, amplitudeProperty);
                     if (loop)
                         PutPropertyField(ref position, offsetProperty);
-                    //Easing
-                    if (loop)
-                    {
-                        //Easing Period
-                        var tmp = (System.Enum)(Easing)easingPeriodProperty.enumValueIndex;
-                        easingPeriodProperty.enumValueIndex = (int)(Easing)EditorGUI.EnumPopup(
-                            position, easingPeriodProperty.displayName, tmp);
+                }
 
-                        position.y += position.height + CLEARANCE_Y;
+                //Easing
+                if (((syncEasing && isXAxis) || (!syncEasing && isEnabled)) && loop)
+                {
+                    //Easing Period
+                    var tmp = (System.Enum)(Easing)easingPeriodProperty.enumValueIndex;
+                    easingPeriodProperty.enumValueIndex = (int)(Easing)EditorGUI.EnumPopup(
+                        position, easingPeriodProperty.displayName, tmp);
 
-                        //Easing Amplitude
-                        tmp = (System.Enum)(Easing)easingAmplitudeProperty.enumValueIndex;
-                        easingAmplitudeProperty.enumValueIndex = (int)(Easing)EditorGUI.EnumPopup(
-                            position, easingAmplitudeProperty.displayName, tmp);
+                    position.y += position.height + CLEARANCE_Y;
 
-                        position.y += position.height + CLEARANCE_Y;
+                    //Easing Amplitude
+                    tmp = (System.Enum)(Easing)easingAmplitudeProperty.enumValueIndex;
+                    easingAmplitudeProperty.enumValueIndex = (int)(Easing)EditorGUI.EnumPopup(
+                        position, easingAmplitudeProperty.displayName, tmp);
 
-                        //Easing Offset
-                        tmp = (System.Enum)(Easing)easingOffsetProperty.enumValueIndex;
-                        easingOffsetProperty.enumValueIndex = (int)(Easing)EditorGUI.EnumPopup(
-                            position, easingOffsetProperty.displayName, tmp);
-                    }
+                    position.y += position.height + CLEARANCE_Y;
+
+                    //Easing Offset
+                    tmp = (System.Enum)(Easing)easingOffsetProperty.enumValueIndex;
+                    easingOffsetProperty.enumValueIndex = (int)(Easing)EditorGUI.EnumPopup(
+                        position, easingOffsetProperty.displayName, tmp);
                 }
             }
         }
@@ -122,11 +131,19 @@ namespace MYB.Jitter
             bool isEnabled = property.FindPropertyRelative("isEnabled").boolValue;
             bool isXAxis = property.FindPropertyRelative("isXAxis").boolValue;
             bool loop = property.FindPropertyRelative("loop").boolValue;
-            bool syncAxis = property.FindPropertyRelative("syncAxis").boolValue;
-            
-            int tmpRow = loop ? 6 : 3;
-            int row = ((syncAxis && isXAxis) || (!syncAxis && isEnabled)) ? tmpRow : 0;
+            bool syncPeriod = property.FindPropertyRelative("syncPeriod").boolValue;
+            bool syncAmplitude = property.FindPropertyRelative("syncAmplitude").boolValue;
+            bool syncEasing = property.FindPropertyRelative("syncEasing").boolValue;
 
+            int row = (syncPeriod && isXAxis) || (!syncPeriod && isEnabled) ?
+                (loop ? 1 : 2) : 0;
+
+            row += (syncAmplitude && isXAxis) || (!syncAmplitude && isEnabled) ?
+                (loop ? 2 : 1) : 0;
+
+            row += (syncEasing && isXAxis) || (!syncEasing && isEnabled) ?
+                (loop ? 3 : 0) : 0;
+            
             return row * (EditorGUIUtility.singleLineHeight + CLEARANCE_Y);
         }
     }

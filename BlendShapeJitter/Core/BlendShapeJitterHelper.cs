@@ -119,7 +119,7 @@ namespace MYB.Jitter
             public State UpdateLoop()
             {
                 isProcessing = true;
-                State state = null;
+                State nextState = null;
 
                 if (timer < 1f)
                 {
@@ -132,9 +132,9 @@ namespace MYB.Jitter
                 else
                 {
                     timer = 0f;
-                    state = SetNextParameter();
+                    nextState = SetNextParameter();
                 }
-                return state;
+                return nextState;
             }
 
             public void UpdateOnce(System.Action callback)

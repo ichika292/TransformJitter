@@ -64,6 +64,7 @@ namespace MYB.Jitter
         protected void OnValidate()
         {
             loopParameter.AdjustParameter();
+            onceParameter.AdjustParameter();
             SetMainMorphName();
             SetDampMorphName();
         }
@@ -101,17 +102,15 @@ namespace MYB.Jitter
                 if (i == 0)
                 {
                     nextState = state.UpdateLoop();
+                    if (!syncPeriod)
+                        nextState = null;
                 }
                 else
                 {
                     if(nextState == null)
-                    {
                         state.UpdateLoop();
-                    }
                     else
-                    {
                         state.SetNextParameter(nextState, syncPeriod, syncAmplitude);
-                    }
                 }
             }
         }

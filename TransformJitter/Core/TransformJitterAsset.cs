@@ -10,7 +10,9 @@ namespace MYB.Jitter
         public UpdateMode updateMode = UpdateMode.Reference;
         public Vector3 reference;
         public bool playOnAwake = true;
-        public bool syncAxis = false;
+        public bool syncPeriod;
+        public bool syncAmplitude;
+        public bool syncEasing;
         public bool overrideOnce;
         public float magnification;
         public List<JitterHelper> helperList = new List<JitterHelper>();
@@ -28,6 +30,32 @@ namespace MYB.Jitter
             new JitterParameter(PrimitiveAnimationCurve.UpDown25, false),
             new JitterParameter(PrimitiveAnimationCurve.UpDown25, false)
         };
+
+        void OnValidate()
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                var lp = loopParameter[i];
+                var op = onceParameter[i];
+                lp.isEnabled = loopEnabled[i];
+                op.isEnabled = onceEnabled[i];
+                lp.syncPeriod = op.syncPeriod = syncPeriod;
+                lp.syncAmplitude = op.syncAmplitude = syncAmplitude;
+                lp.syncEasing = op.syncEasing = syncEasing;
+            }
+
+            if (syncPeriod && syncAmplitude)
+            {
+                for (int i = 1; i < 3; i++)
+                {
+                    loopParameter[i].CopyFrom(loopParameter[0]);
+                    onceParameter[i].CopyFrom(onceParameter[0]);
+                }
+            }
+
+            foreach (JitterParameter param in loopParameter)
+                param.AdjustParameter();
+        }
 
         //Editor用
         public string[] axisLabel = { "--- X ---", "--- Y ---", "--- Z ---" };
@@ -51,7 +79,9 @@ namespace MYB.Jitter
             SerializedProperty updateModeProperty;
             SerializedProperty referenceProperty;
             SerializedProperty playOnAwakeProperty;
-            SerializedProperty syncAxisProperty;
+            SerializedProperty syncPeriodProperty;
+            SerializedProperty syncAmplitudeProperty;
+            SerializedProperty syncEasingProperty;
             SerializedProperty overrideOnceProperty;
             SerializedProperty magnificationProperty;
             SerializedProperty loopParameterProperty;
@@ -62,7 +92,9 @@ namespace MYB.Jitter
                 updateModeProperty = serializedObject.FindProperty("updateMode");
                 referenceProperty = serializedObject.FindProperty("reference");
                 playOnAwakeProperty = serializedObject.FindProperty("playOnAwake");
-                syncAxisProperty = serializedObject.FindProperty("syncAxis");
+                syncPeriodProperty = serializedObject.FindProperty("syncPeriod");
+                syncAmplitudeProperty = serializedObject.FindProperty("syncAmplitude");
+                syncEasingProperty = serializedObject.FindProperty("syncEasing");
                 overrideOnceProperty = serializedObject.FindProperty("overrideOnce");
                 magnificationProperty = serializedObject.FindProperty("magnification");
                 loopParameterProperty = serializedObject.FindProperty("loopParameter");
@@ -88,44 +120,58 @@ namespace MYB.Jitter
                 //PlayOnAwake
                 playOnAwakeProperty.boolValue = EditorGUILayout.Toggle(playOnAwakeProperty.displayName, playOnAwakeProperty.boolValue);
 
-                //sync Axis
-                syncAxisProperty.boolValue = EditorGUILayout.Toggle(syncAxisProperty.displayName, syncAxisProperty.boolValue);
-                
-                overrideOnceProperty.boolValue = EditorGUILayout.Toggle(overrideOnceProperty.displayName, overrideOnceProperty.boolValue);
-                
-                magnificationProperty.floatValue = EditorGUILayout.FloatField(magnificationProperty.displayName, magnificationProperty.floatValue);
-                
-                //JitterParameter (Loop)
-                self.loopGroupEnabled = EditorGUILayout.ToggleLeft("--- LOOP ---", self.loopGroupEnabled, EditorStyles.boldLabel);
-                    
-                if (self.loopGroupEnabled)
+                EditorGUI.BeginChangeCheck();
                 {
-                    EditorGUI.indentLevel++;
-                    for (int i = 0; i < 3; i++)
-                    {
-                        self.loopEnabled[i] = EditorGUILayout.ToggleLeft(self.axisLabel[i], self.loopEnabled[i], EditorStyles.boldLabel);
-                        if (self.loopEnabled[i])
-                            self.loopParameter[i].periodToAmplitude = EditorGUILayout.CurveField("Period to Amplitude", self.loopParameter[i].periodToAmplitude);
-                        EditorGUILayout.PropertyField(loopParameterProperty.GetArrayElementAtIndex(i));
-                    }
-                    EditorGUI.indentLevel--;
-                }
+                    //sync
+                    syncPeriodProperty.boolValue = EditorGUILayout.Toggle(syncPeriodProperty.displayName, syncPeriodProperty.boolValue);
 
-                //JitterParameter (Once)
-                self.onceGroupEnabled = EditorGUILayout.ToggleLeft("--- ONCE ---", self.onceGroupEnabled, EditorStyles.boldLabel);
-                
-                if (self.onceGroupEnabled)
-                {
-                    EditorGUI.indentLevel++;
-                    for (int i = 0; i < 3; i++)
+                    EditorGUI.BeginDisabledGroup(!syncPeriodProperty.boolValue);
                     {
-                        self.onceEnabled[i] = EditorGUILayout.ToggleLeft(self.axisLabel[i], self.onceEnabled[i], EditorStyles.boldLabel);
-                        if (self.onceEnabled[i])
-                            self.onceParameter[i].periodToAmplitude = EditorGUILayout.CurveField("Period to Amplitude", self.onceParameter[i].periodToAmplitude);
-                        EditorGUILayout.PropertyField(onceParameterProperty.GetArrayElementAtIndex(i));
+                        if (!syncPeriodProperty.boolValue)
+                            syncAmplitudeProperty.boolValue = false;
+                        syncAmplitudeProperty.boolValue = EditorGUILayout.Toggle(syncAmplitudeProperty.displayName, syncAmplitudeProperty.boolValue);
                     }
-                    EditorGUI.indentLevel--;
-                }
+                    EditorGUI.EndDisabledGroup();
+
+                    syncEasingProperty.boolValue = EditorGUILayout.Toggle(syncEasingProperty.displayName, syncEasingProperty.boolValue);
+
+                    overrideOnceProperty.boolValue = EditorGUILayout.Toggle(overrideOnceProperty.displayName, overrideOnceProperty.boolValue);
+                
+                    magnificationProperty.floatValue = EditorGUILayout.FloatField(magnificationProperty.displayName, magnificationProperty.floatValue);
+
+                    //JitterParameter (Loop)
+                    self.loopGroupEnabled = EditorGUILayout.ToggleLeft("--- LOOP ---", self.loopGroupEnabled, EditorStyles.boldLabel);
+
+                    if (self.loopGroupEnabled)
+                    {
+                        EditorGUI.indentLevel++;
+                        for (int i = 0; i < 3; i++)
+                        {
+                            self.loopEnabled[i] = EditorGUILayout.ToggleLeft(self.axisLabel[i], self.loopEnabled[i], EditorStyles.boldLabel);
+                            if (self.loopEnabled[i])
+                                self.loopParameter[i].periodToAmplitude = EditorGUILayout.CurveField("Period to Amplitude", self.loopParameter[i].periodToAmplitude);
+                            EditorGUILayout.PropertyField(loopParameterProperty.GetArrayElementAtIndex(i));
+                        }
+                        EditorGUI.indentLevel--;
+                    }
+
+                    //JitterParameter (Once)
+                    self.onceGroupEnabled = EditorGUILayout.ToggleLeft("--- ONCE ---", self.onceGroupEnabled, EditorStyles.boldLabel);
+
+                    if (self.onceGroupEnabled)
+                    {
+                        EditorGUI.indentLevel++;
+                        for (int i = 0; i < 3; i++)
+                        {
+                            self.onceEnabled[i] = EditorGUILayout.ToggleLeft(self.axisLabel[i], self.onceEnabled[i], EditorStyles.boldLabel);
+                            if (self.onceEnabled[i])
+                                self.onceParameter[i].periodToAmplitude = EditorGUILayout.CurveField("Period to Amplitude", self.onceParameter[i].periodToAmplitude);
+                            EditorGUILayout.PropertyField(onceParameterProperty.GetArrayElementAtIndex(i));
+                        }
+                        EditorGUI.indentLevel--;
+                    }
+                }if (EditorGUI.EndChangeCheck()) self.OnValidate();
+
                 serializedObject.ApplyModifiedProperties();
             }
         }

@@ -10,7 +10,9 @@ namespace MYB.Jitter
         public UpdateMode updateMode = UpdateMode.Reference;
         public Vector3 reference;
         public bool playOnAwake = true;
-        public bool syncAxis = false;
+        public bool syncPeriod;
+        public bool syncAmplitude;
+        public bool syncEasing;
         public bool overrideOnce;
         public float magnification;
         public List<JitterHelper> helperList = new List<JitterHelper>();
@@ -66,13 +68,16 @@ namespace MYB.Jitter
         {
             for (int i = 0; i < 3; i++)
             {
-                loopParameter[i].isEnabled = loopEnabled[i];
-                onceParameter[i].isEnabled = onceEnabled[i];
-                loopParameter[i].syncAxis = syncAxis;
-                onceParameter[i].syncAxis = syncAxis;
+                var lp = loopParameter[i];
+                var op = onceParameter[i];
+                lp.isEnabled = loopEnabled[i];
+                op.isEnabled = onceEnabled[i];
+                lp.syncPeriod = op.syncPeriod = syncPeriod;
+                lp.syncAmplitude = op.syncAmplitude = syncAmplitude;
+                lp.syncEasing = op.syncEasing = syncEasing;
             }
 
-            if (syncAxis)
+            if (syncPeriod && syncAmplitude)
             {
                 for (int i = 1; i < 3; i++)
                 {
@@ -89,9 +94,25 @@ namespace MYB.Jitter
         {
             if (!loopGroupEnabled || playState == PlayState.Stop) return;
 
-            foreach (JitterHelper h in helperList)
+            JitterHelper.State nextState = null;
+            for (int i = 0; i < helperList.Count; i++)
             {
-                h.loopState.UpdateLoop();
+                var state = helperList[i].loopState;
+                var easingPeriod = loopParameter[syncEasing ? 0 : i].easingPeriod;
+
+                if (i == 0)
+                {
+                    nextState = state.UpdateLoop(easingPeriod);
+                    if (!syncPeriod)
+                        nextState = null;
+                }
+                else
+                {
+                    if (nextState == null)
+                        state.UpdateLoop(easingPeriod);
+                    else
+                        state.SetNextParameter(nextState, syncPeriod, syncAmplitude);
+                }
             }
         }
 
@@ -170,12 +191,15 @@ namespace MYB.Jitter
             {
                 var loopCurve = loopParameter[i].periodToAmplitude;
                 var onceCurve = onceParameter[i].periodToAmplitude;
+                int helperIndex = syncAmplitude ? 0 : i;
+                int easingIndex = syncEasing ? 0 : i;
 
                 Vector2 weight = Vector2.zero;
+
                 if (loopGroupEnabled)
-                    weight.x = helperList[syncAxis ? 0 : i].GetLoopAngle(loopCurve);
+                    weight.x = helperList[helperIndex].GetCurrentLoopWeight(loopCurve, loopParameter[easingIndex]);
                 if (onceGroupEnabled)
-                    weight.y = helperList[syncAxis ? 0 : i].GetOnceAngle(onceCurve);
+                    weight.y = helperList[helperIndex].GetCurrentOnceWeight(onceCurve);
 
                 Vector2 enabledFlag = new Vector2(loopEnabled[i] ? 1 : 0, onceEnabled[i] ? 1 : 0);
 
@@ -231,7 +255,9 @@ namespace MYB.Jitter
             updateMode = asset.updateMode;
             reference = asset.reference;
             playOnAwake = asset.playOnAwake;
-            syncAxis = asset.syncAxis;
+            syncPeriod = asset.syncPeriod;
+            syncAmplitude = asset.syncAmplitude;
+            syncEasing = asset.syncEasing;
             overrideOnce = asset.overrideOnce;
             magnification = asset.magnification;
             loopGroupEnabled = asset.loopGroupEnabled;
@@ -261,7 +287,9 @@ namespace MYB.Jitter
             asset.updateMode = updateMode;
             asset.reference = reference;
             asset.playOnAwake = playOnAwake;
-            asset.syncAxis = syncAxis;
+            asset.syncPeriod = syncPeriod;
+            asset.syncAmplitude = syncAmplitude;
+            asset.syncEasing = syncEasing;
             asset.overrideOnce = overrideOnce;
             asset.magnification = magnification;
             asset.loopGroupEnabled = loopGroupEnabled;

@@ -190,19 +190,16 @@ namespace MYB.Jitter
                 playOnAwakeProperty.boolValue = EditorGUILayout.Toggle(playOnAwakeProperty.displayName, playOnAwakeProperty.boolValue);
 
                 //sync
-                EditorGUI.BeginDisabledGroup(EditorApplication.isPlaying);
-                {
-                    syncPeriodProperty.boolValue = EditorGUILayout.Toggle(syncPeriodProperty.displayName, syncPeriodProperty.boolValue);
+                syncPeriodProperty.boolValue = EditorGUILayout.Toggle(syncPeriodProperty.displayName, syncPeriodProperty.boolValue);
 
-                    EditorGUI.BeginDisabledGroup(!syncPeriodProperty.boolValue);
-                    {
-                        if (!syncPeriodProperty.boolValue)
-                            syncAmplitudeProperty.boolValue = false;
-                        syncAmplitudeProperty.boolValue = EditorGUILayout.Toggle(syncAmplitudeProperty.displayName, syncAmplitudeProperty.boolValue);
-                    }
-                    EditorGUI.EndDisabledGroup();
+                EditorGUI.BeginDisabledGroup(!syncPeriodProperty.boolValue);
+                {
+                    if (!syncPeriodProperty.boolValue)
+                        syncAmplitudeProperty.boolValue = false;
+                    syncAmplitudeProperty.boolValue = EditorGUILayout.Toggle(syncAmplitudeProperty.displayName, syncAmplitudeProperty.boolValue);
                 }
                 EditorGUI.EndDisabledGroup();
+
                 overrideOnceProperty.boolValue = EditorGUILayout.Toggle(overrideOnceProperty.displayName, overrideOnceProperty.boolValue);
 
                 //JitterParameter (Loop)

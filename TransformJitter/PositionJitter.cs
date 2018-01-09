@@ -92,7 +92,9 @@ namespace MYB.Jitter
             SerializedProperty updateModeProperty;
             SerializedProperty referenceProperty;
             SerializedProperty playOnAwakeProperty;
-            SerializedProperty syncAxisProperty;
+            SerializedProperty syncPeriodProperty;
+            SerializedProperty syncAmplitudeProperty;
+            SerializedProperty syncEasingProperty;
             SerializedProperty overrideOnceProperty;
             SerializedProperty magnificationProperty;
             SerializedProperty loopParameterProperty;
@@ -103,7 +105,9 @@ namespace MYB.Jitter
                 updateModeProperty = serializedObject.FindProperty("updateMode");
                 referenceProperty = serializedObject.FindProperty("reference");
                 playOnAwakeProperty = serializedObject.FindProperty("playOnAwake");
-                syncAxisProperty = serializedObject.FindProperty("syncAxis");
+                syncPeriodProperty = serializedObject.FindProperty("syncPeriod");
+                syncAmplitudeProperty = serializedObject.FindProperty("syncAmplitude");
+                syncEasingProperty = serializedObject.FindProperty("syncEasing");
                 overrideOnceProperty = serializedObject.FindProperty("overrideOnce");
                 magnificationProperty = serializedObject.FindProperty("magnification");
                 loopParameterProperty = serializedObject.FindProperty("loopParameter");
@@ -161,16 +165,23 @@ namespace MYB.Jitter
                 if (!self.isChild)
                     playOnAwakeProperty.boolValue = EditorGUILayout.Toggle(playOnAwakeProperty.displayName, playOnAwakeProperty.boolValue);
 
-                //sync Axis
-                EditorGUI.BeginDisabledGroup(EditorApplication.isPlaying);
+                //sync
+                EditorGUI.BeginChangeCheck();
                 {
-                    EditorGUI.BeginChangeCheck();
+                    syncPeriodProperty.boolValue = EditorGUILayout.Toggle(syncPeriodProperty.displayName, syncPeriodProperty.boolValue);
+                        
+                    EditorGUI.BeginDisabledGroup(!syncPeriodProperty.boolValue);
                     {
-                        syncAxisProperty.boolValue = EditorGUILayout.Toggle(syncAxisProperty.displayName, syncAxisProperty.boolValue);
+                        if (!syncPeriodProperty.boolValue)
+                            syncAmplitudeProperty.boolValue = false;
+                        syncAmplitudeProperty.boolValue = EditorGUILayout.Toggle(syncAmplitudeProperty.displayName, syncAmplitudeProperty.boolValue);
                     }
-                    if (EditorGUI.EndChangeCheck()) self.OnValidate();
+                    EditorGUI.EndDisabledGroup();
+
+                    syncEasingProperty.boolValue = EditorGUILayout.Toggle(syncEasingProperty.displayName, syncEasingProperty.boolValue);
                 }
-                EditorGUI.EndDisabledGroup();
+                if (EditorGUI.EndChangeCheck()) self.OnValidate();
+
                 overrideOnceProperty.boolValue = EditorGUILayout.Toggle(overrideOnceProperty.displayName, overrideOnceProperty.boolValue);
 
                 if (!self.isChild)

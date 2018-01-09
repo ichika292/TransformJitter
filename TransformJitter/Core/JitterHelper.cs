@@ -53,16 +53,51 @@ namespace MYB.Jitter
                 SetNextParameter();
             }
 
-            public void SetNextParameter()
+            public State SetNextParameter()
+            {
+                SetNextPeriod();
+                SetNextAmplitude();
+                return this;
+            }
+
+            public void SetNextParameter(State state, bool syncPeriod, bool syncAmplitude)
+            {
+                timer = 0f;
+                if (syncPeriod)
+                {
+                    curPeriod = state.curPeriod;
+                    nextPeriod = state.nextPeriod;
+                    curInterval = state.curInterval;
+                }
+                else
+                {
+                    SetNextPeriod();
+                }
+
+                if (syncAmplitude)
+                {
+                    curAmplitude = state.curAmplitude;
+                    nextAmplitude = state.nextAmplitude;
+                    curOffset = state.curOffset;
+                    nextOffset = state.nextOffset;
+                }
+                else
+                {
+                    SetNextAmplitude();
+                }
+            }
+
+            void SetNextPeriod()
             {
                 curPeriod = nextPeriod;
                 nextPeriod = param.period.Random();
-
                 curInterval = param.interval.Random();
+            }
 
+            void SetNextAmplitude()
+            {
                 curAmplitude = nextAmplitude;
                 nextAmplitude = param.amplitude.Random();
-
                 curOffset = nextOffset;
                 nextOffset = param.offset.Random();
             }
@@ -79,13 +114,15 @@ namespace MYB.Jitter
             /// 現在のWeightを計算
             /// </summary>
             /// <returns>weight</returns>
-            public float GetCurrentWeight(AnimationCurve curve)
+            public float GetCurrentWeight(AnimationCurve curve, JitterParameter _param = null)
             {
                 if (curPeriod <= 0f) return curOffset;
 
+                var easeParam = (_param == null) ? param : _param;
+
                 float timer01 = Mathf.Clamp01(timer);
-                float amp = param.easingAmplitude.Evaluate(curAmplitude, nextAmplitude, timer01);
-                float ofs = param.easingOffset.Evaluate(curOffset, nextOffset, timer01);
+                float amp = easeParam.easingAmplitude.Evaluate(curAmplitude, nextAmplitude, timer01);
+                float ofs = easeParam.easingOffset.Evaluate(curOffset, nextOffset, timer01);
                 return Mathf.Clamp(curve.Evaluate(timer01) * amp + ofs, -1, 1);
             }
 
@@ -95,19 +132,26 @@ namespace MYB.Jitter
                 return param.easingPeriod.Evaluate(curPeriod, nextPeriod, timer01);
             }
 
+            public float GetCurrentPeriod(Easing easePeriod)
+            {
+                float timer01 = Mathf.Clamp01(timer);
+                return easePeriod.Evaluate(curPeriod, nextPeriod, timer01);
+            }
+
             public void Reset()
             {
                 isProcessing = false;
                 timer = 0f;
             }
 
-            public void UpdateLoop()
+            public State UpdateLoop(Easing easePeriod)
             {
                 isProcessing = true;
+                State nextState = null;
 
                 if (timer < 1f)
                 {
-                    timer += Time.deltaTime / GetCurrentPeriod();
+                    timer += Time.deltaTime / GetCurrentPeriod(easePeriod);
                 }
                 else if (timer < 1f + curInterval)
                 {
@@ -116,8 +160,9 @@ namespace MYB.Jitter
                 else
                 {
                     timer = 0f;
-                    SetNextParameter();
+                    nextState = SetNextParameter();
                 }
+                return nextState;
             }
 
             public void UpdateOnce(System.Action callback)
@@ -169,12 +214,12 @@ namespace MYB.Jitter
             onceState.Reset();
         }
         
-        public float GetLoopAngle(AnimationCurve loopCurve)
+        public float GetCurrentLoopWeight(AnimationCurve loopCurve, JitterParameter _param)
         {
-            return loopState.GetCurrentWeight(loopCurve);
+            return loopState.GetCurrentWeight(loopCurve, _param);
         }
 
-        public float GetOnceAngle(AnimationCurve onceCurve)
+        public float GetCurrentOnceWeight(AnimationCurve onceCurve)
         {
             return onceState.GetCurrentWeight(onceCurve);
         }

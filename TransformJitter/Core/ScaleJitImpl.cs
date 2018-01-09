@@ -58,8 +58,8 @@ namespace MYB.Jitter
                     .ToList();
             }
 
-            //helperList初期化 (syncAxis ? 1 : 3)個インスタンス化
-            for (int i = 0; i < (syncAxis ? 1 : 3); i++)
+            //helperList初期化 1or3個インスタンス化
+            for (int i = 0; i < ((syncPeriod && syncAmplitude) ? 1 : 3); i++)
             {
                 helperList.Add(new JitterHelper(loopParameter[i], onceParameter[i]));
             }
@@ -70,6 +70,8 @@ namespace MYB.Jitter
 
         protected void LateUpdate()
         {
+            if (target == null) return;
+
             UpdateOnce();
             if (isChild) return;
 

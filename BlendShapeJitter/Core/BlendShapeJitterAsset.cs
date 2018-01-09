@@ -20,6 +20,12 @@ namespace MYB.Jitter
 
         public List<BlendShapeJitterHelper> helperList = new List<BlendShapeJitterHelper>();
         public List<BlendShapeJitterDamper> damperList = new List<BlendShapeJitterDamper>();
+
+        void OnValidate()
+        {
+            loopParameter.AdjustParameter();
+            onceParameter.AdjustParameter();
+        }
         
         [MenuItem("Assets/Create/Jitter/BlendShapeJitterAsset", false, 21000)]
         static BlendShapeJitterAsset CreateBlendShapeJitterAssetInstance()
@@ -122,30 +128,38 @@ namespace MYB.Jitter
 
                 playOnAwakeProperty.boolValue = EditorGUILayout.Toggle(playOnAwakeProperty.displayName, playOnAwakeProperty.boolValue);
 
-                //sync
-                EditorGUI.BeginDisabledGroup(EditorApplication.isPlaying);
-                syncPeriodProperty.boolValue = EditorGUILayout.Toggle(syncPeriodProperty.displayName, syncPeriodProperty.boolValue);
-                syncAmplitudeProperty.boolValue = EditorGUILayout.Toggle(syncAmplitudeProperty.displayName, syncAmplitudeProperty.boolValue);
-                EditorGUI.EndDisabledGroup();
-                overrideOnceProperty.boolValue = EditorGUILayout.Toggle(overrideOnceProperty.displayName, overrideOnceProperty.boolValue);
-
-                //JitterParameter (Loop)
-                self.loopGroupEnabled = EditorGUILayout.ToggleLeft("--- LOOP ---", self.loopGroupEnabled, EditorStyles.boldLabel);
-                
-                if (self.loopGroupEnabled)
+                EditorGUI.BeginChangeCheck();
                 {
-                    self.loopParameter.periodToAmplitude = EditorGUILayout.CurveField("Period to Amplitude", self.loopParameter.periodToAmplitude);
-                    EditorGUILayout.PropertyField(loopParameterProperty);
-                }
+                    //sync
+                    syncPeriodProperty.boolValue = EditorGUILayout.Toggle(syncPeriodProperty.displayName, syncPeriodProperty.boolValue);
+                    EditorGUI.BeginDisabledGroup(!syncPeriodProperty.boolValue);
+                    {
+                        if (!syncPeriodProperty.boolValue)
+                            syncAmplitudeProperty.boolValue = false;
+                        syncAmplitudeProperty.boolValue = EditorGUILayout.Toggle(syncAmplitudeProperty.displayName, syncAmplitudeProperty.boolValue);
+                    }
+                    EditorGUI.EndDisabledGroup();
+                    overrideOnceProperty.boolValue = EditorGUILayout.Toggle(overrideOnceProperty.displayName, overrideOnceProperty.boolValue);
 
-                //JitterParameter (Once)
-                self.onceGroupEnabled = EditorGUILayout.ToggleLeft("--- ONCE ---", self.onceGroupEnabled, EditorStyles.boldLabel);
-                
-                if (self.onceGroupEnabled)
-                {
-                    self.onceParameter.periodToAmplitude = EditorGUILayout.CurveField("Period to Amplitude", self.onceParameter.periodToAmplitude);
-                    EditorGUILayout.PropertyField(onceParameterProperty);
+                    //JitterParameter (Loop)
+                    self.loopGroupEnabled = EditorGUILayout.ToggleLeft("--- LOOP ---", self.loopGroupEnabled, EditorStyles.boldLabel);
+
+                    if (self.loopGroupEnabled)
+                    {
+                        self.loopParameter.periodToAmplitude = EditorGUILayout.CurveField("Period to Amplitude", self.loopParameter.periodToAmplitude);
+                        EditorGUILayout.PropertyField(loopParameterProperty);
+                    }
+
+                    //JitterParameter (Once)
+                    self.onceGroupEnabled = EditorGUILayout.ToggleLeft("--- ONCE ---", self.onceGroupEnabled, EditorStyles.boldLabel);
+
+                    if (self.onceGroupEnabled)
+                    {
+                        self.onceParameter.periodToAmplitude = EditorGUILayout.CurveField("Period to Amplitude", self.onceParameter.periodToAmplitude);
+                        EditorGUILayout.PropertyField(onceParameterProperty);
+                    }
                 }
+                if (EditorGUI.EndChangeCheck()) self.OnValidate();
 
                 //Helper List
                 helperReorderableList.DoLayoutList();
