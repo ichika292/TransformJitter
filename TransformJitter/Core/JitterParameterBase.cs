@@ -18,14 +18,6 @@ namespace MYB.Jitter
     /// </summary>
     public class JitterParameterBase
     {
-        //次周期のパラメータとの補間(AmplitudeとOffset)
-        public enum BlendState
-        {
-            None,
-            Linear,
-            Curve,
-        }
-
         const float MIN_LIMIT_PERIOD = 0.04f;
         const float MAX_LIMIT_PERIOD = 5f;
         const float MIN_LIMIT_INTERVAL = 0f;
@@ -37,8 +29,9 @@ namespace MYB.Jitter
         public FloatRange offset;       //morphWeight下限
 
         public AnimationCurve periodToAmplitude;    //weight = curve(timer/period) * amplitude + offset
-        public BlendState blendNextPeriod;
-        public BlendState blendNextAmplitude;
+        public Easing easingPeriod;
+        public Easing easingAmplitude;
+        public Easing easingOffset;
 
         //Editor用
         public bool isEnabled;
@@ -108,8 +101,9 @@ namespace MYB.Jitter
             interval.CopyFrom(input.interval);
             amplitude.CopyFrom(input.amplitude);
             offset.CopyFrom(input.offset);
-            blendNextPeriod = input.blendNextPeriod;
-            blendNextAmplitude = input.blendNextAmplitude;
+            easingPeriod = input.easingPeriod;
+            easingAmplitude = input.easingAmplitude;
+            easingOffset = input.easingOffset;
 
             if (CopyFully)
             {

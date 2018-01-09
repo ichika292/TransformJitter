@@ -84,15 +84,15 @@ namespace MYB.Jitter
                 if (curPeriod <= 0f) return curOffset;
 
                 float timer01 = Mathf.Clamp01(timer);
-                float amp = CalcBlendState(curAmplitude, nextAmplitude, timer01, param.blendNextAmplitude);
-                float ofs = CalcBlendState(curOffset, nextOffset, timer01, param.blendNextAmplitude);
+                float amp = param.easingAmplitude.Evaluate(curAmplitude, nextAmplitude, timer01);
+                float ofs = param.easingOffset.Evaluate(curOffset, nextOffset, timer01);
                 return Mathf.Clamp(curve.Evaluate(timer01) * amp + ofs, -1, 1);
             }
 
             public float GetCurrentPeriod()
             {
                 float timer01 = Mathf.Clamp01(timer);
-                return CalcBlendState(curPeriod, nextPeriod, timer01, param.blendNextPeriod);
+                return param.easingPeriod.Evaluate(curPeriod, nextPeriod, timer01);
             }
 
             public void Reset()
@@ -177,22 +177,6 @@ namespace MYB.Jitter
         public float GetOnceAngle(AnimationCurve onceCurve)
         {
             return onceState.GetCurrentWeight(onceCurve);
-        }
-
-        /// <summary>
-        /// 次周期のパラメータとの補間(AmplitudeとOffset)
-        /// </summary>
-        static float CalcBlendState(float current, float next, float t, JitterParameter.BlendState blendState)
-        {
-            switch (blendState)
-            {
-                case JitterParameter.BlendState.Linear:
-                    return Mathf.Lerp(current, next, t);
-                case JitterParameter.BlendState.Curve:
-                    return (next - current) * (-2 * t + 3) * t * t + current;
-                default:
-                    return current;
-            }
         }
     }
 }

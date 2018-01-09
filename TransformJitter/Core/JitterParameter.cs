@@ -32,23 +32,25 @@ namespace MYB.Jitter
                 period.max = 3f;
                 offset.max = 0.3f;
                 offset.min = -0.3f;
-                blendNextPeriod = BlendState.Curve;
-                blendNextAmplitude = BlendState.Curve;
+                easingPeriod = Easing.CubicInOut;
+                easingAmplitude = Easing.CubicInOut;
+                easingOffset = Easing.CubicInOut;
             }
             else
             {
                 period.max = 1f;
                 amplitude.min = -0.5f;
                 amplitude.max = 0.5f;
-                blendNextPeriod = BlendState.None;
-                blendNextAmplitude = BlendState.None;
+                easingPeriod = Easing.None;
+                easingAmplitude = Easing.None;
+                easingOffset = Easing.None;
             }
         }
     }
 
 #if UNITY_EDITOR
     [CustomPropertyDrawer(typeof(JitterParameter))]
-    public class BoneJitterParameterDrawer : PropertyDrawer
+    public class JitterParameterDrawer : PropertyDrawer
     {
         const int CLEARANCE_Y = 2;
 
@@ -66,8 +68,9 @@ namespace MYB.Jitter
                 var intervalProperty = property.FindPropertyRelative("interval");
                 var amplitudeProperty = property.FindPropertyRelative("amplitude");
                 var offsetProperty = property.FindPropertyRelative("offset");
-                var blendNextPeriodProperty = property.FindPropertyRelative("blendNextPeriod");
-                var blendNextAmplitudeProperty = property.FindPropertyRelative("blendNextAmplitude");
+                var easingPeriodProperty = property.FindPropertyRelative("easingPeriod");
+                var easingAmplitudeProperty = property.FindPropertyRelative("easingAmplitude");
+                var easingOffsetProperty = property.FindPropertyRelative("easingOffset");
 
                 position.height = EditorGUIUtility.singleLineHeight;
                 
@@ -81,20 +84,27 @@ namespace MYB.Jitter
                     PutPropertyField(ref position, amplitudeProperty);
                     if (loop)
                         PutPropertyField(ref position, offsetProperty);
-                    //Blend State
+                    //Easing
                     if (loop)
                     {
-                        //Blend Next Period
-                        var tmp = (System.Enum)(JitterParameter.BlendState)blendNextPeriodProperty.enumValueIndex;
-                        blendNextPeriodProperty.enumValueIndex = (int)(JitterParameter.BlendState)EditorGUI.EnumPopup(
-                            position, blendNextPeriodProperty.displayName, tmp);
+                        //Easing Period
+                        var tmp = (System.Enum)(Easing)easingPeriodProperty.enumValueIndex;
+                        easingPeriodProperty.enumValueIndex = (int)(Easing)EditorGUI.EnumPopup(
+                            position, easingPeriodProperty.displayName, tmp);
 
                         position.y += position.height + CLEARANCE_Y;
 
-                        //Blend Next Amplitude
-                        tmp = (System.Enum)(JitterParameter.BlendState)blendNextAmplitudeProperty.enumValueIndex;
-                        blendNextAmplitudeProperty.enumValueIndex = (int)(JitterParameter.BlendState)EditorGUI.EnumPopup(
-                            position, blendNextAmplitudeProperty.displayName, tmp);
+                        //Easing Amplitude
+                        tmp = (System.Enum)(Easing)easingAmplitudeProperty.enumValueIndex;
+                        easingAmplitudeProperty.enumValueIndex = (int)(Easing)EditorGUI.EnumPopup(
+                            position, easingAmplitudeProperty.displayName, tmp);
+
+                        position.y += position.height + CLEARANCE_Y;
+
+                        //Easing Offset
+                        tmp = (System.Enum)(Easing)easingOffsetProperty.enumValueIndex;
+                        easingOffsetProperty.enumValueIndex = (int)(Easing)EditorGUI.EnumPopup(
+                            position, easingOffsetProperty.displayName, tmp);
                     }
                 }
             }
@@ -114,7 +124,7 @@ namespace MYB.Jitter
             bool loop = property.FindPropertyRelative("loop").boolValue;
             bool syncAxis = property.FindPropertyRelative("syncAxis").boolValue;
             
-            int tmpRow = loop ? 5 : 3;
+            int tmpRow = loop ? 6 : 3;
             int row = ((syncAxis && isXAxis) || (!syncAxis && isEnabled)) ? tmpRow : 0;
 
             return row * (EditorGUIUtility.singleLineHeight + CLEARANCE_Y);
