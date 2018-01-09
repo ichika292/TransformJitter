@@ -94,7 +94,8 @@ namespace MYB.Jitter
         public class BlendShapeJitterEditor : Editor
         {
             SerializedProperty playOnAwakeProperty;
-            SerializedProperty syncProperty;
+            SerializedProperty syncPeriodProperty;
+            SerializedProperty syncAmplitudeProperty;
             SerializedProperty overrideOnceProperty;
             SerializedProperty helperListProperty;
             SerializedProperty damperListProperty;
@@ -109,7 +110,8 @@ namespace MYB.Jitter
                 var self = target as BlendShapeJitter;
 
                 playOnAwakeProperty = serializedObject.FindProperty("playOnAwake");
-                syncProperty = serializedObject.FindProperty("sync");
+                syncPeriodProperty = serializedObject.FindProperty("syncPeriod");
+                syncAmplitudeProperty = serializedObject.FindProperty("syncAmplitude");
                 overrideOnceProperty = serializedObject.FindProperty("overrideOnce");
                 helperListProperty = serializedObject.FindProperty("helperList");
                 damperListProperty = serializedObject.FindProperty("damperList");
@@ -189,7 +191,17 @@ namespace MYB.Jitter
 
                 //sync
                 EditorGUI.BeginDisabledGroup(EditorApplication.isPlaying);
-                syncProperty.boolValue = EditorGUILayout.Toggle(syncProperty.displayName, syncProperty.boolValue);
+                {
+                    syncPeriodProperty.boolValue = EditorGUILayout.Toggle(syncPeriodProperty.displayName, syncPeriodProperty.boolValue);
+
+                    EditorGUI.BeginDisabledGroup(!syncPeriodProperty.boolValue);
+                    {
+                        if (!syncPeriodProperty.boolValue)
+                            syncAmplitudeProperty.boolValue = false;
+                        syncAmplitudeProperty.boolValue = EditorGUILayout.Toggle(syncAmplitudeProperty.displayName, syncAmplitudeProperty.boolValue);
+                    }
+                    EditorGUI.EndDisabledGroup();
+                }
                 EditorGUI.EndDisabledGroup();
                 overrideOnceProperty.boolValue = EditorGUILayout.Toggle(overrideOnceProperty.displayName, overrideOnceProperty.boolValue);
 

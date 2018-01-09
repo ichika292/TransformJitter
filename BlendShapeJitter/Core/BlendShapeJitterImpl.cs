@@ -12,7 +12,8 @@ namespace MYB.Jitter
     {
         public SkinnedMeshRenderer skinnedMeshRenderer;
         public bool playOnAwake = true;
-        public bool sync;
+        public bool syncPeriod;
+        public bool syncAmplitude;
         public bool overrideOnce;
         public bool loopGroupEnabled = true;
         public bool onceGroupEnabled = true;
@@ -81,6 +82,8 @@ namespace MYB.Jitter
         
         void Update()
         {
+            if (helperList.Count == 0) return;
+
             UpdateLoop();
             UpdateOnce();
             UpdateFade();
@@ -91,9 +94,25 @@ namespace MYB.Jitter
         {
             if (!loopGroupEnabled || playState == PlayState.Stop) return;
 
-            foreach (BlendShapeJitterHelper h in helperList)
+            BlendShapeJitterHelper.State nextState = null;
+            for (int i = 0; i < helperList.Count; i++)
             {
-                h.loopState.UpdateLoop();
+                var state = helperList[i].loopState;
+                if (i == 0)
+                {
+                    nextState = state.UpdateLoop();
+                }
+                else
+                {
+                    if(nextState == null)
+                    {
+                        state.UpdateLoop();
+                    }
+                    else
+                    {
+                        state.SetNextParameter(nextState, syncPeriod, syncAmplitude);
+                    }
+                }
             }
         }
 
@@ -139,7 +158,7 @@ namespace MYB.Jitter
             {
                 if (!weight.HasValue)
                 {
-                    //helperList[0]のweightを排他リストのweightに応じて減らす
+                    //helperList[0]のweightをDamperListのweightに応じて減らす
                     weight = h.GetMorphWeight();
                     float tmp = weight.Value;
                     foreach (BlendShapeJitterDamper d in damperList)
@@ -148,7 +167,7 @@ namespace MYB.Jitter
                 }
                 else
                 {
-                    if (sync)
+                    if (syncPeriod && syncAmplitude)
                         //helperList[0]のweight計算結果を全モーフで共有
                         h.SetMorphWeight(weight.Value);
                     else
@@ -309,7 +328,7 @@ namespace MYB.Jitter
             }
 
             playOnAwake = asset.playOnAwake;
-            sync = asset.sync;
+            syncPeriod = asset.syncPeriod;
             overrideOnce = asset.overrideOnce;
             loopGroupEnabled = asset.loopGroupEnabled;
             onceGroupEnabled = asset.onceGroupEnabled;
@@ -339,7 +358,8 @@ namespace MYB.Jitter
             }
 
             asset.playOnAwake = playOnAwake;
-            asset.sync = sync;
+            asset.syncPeriod = syncPeriod;
+            asset.syncAmplitude = syncAmplitude;
             asset.overrideOnce = overrideOnce;
             asset.loopGroupEnabled = loopGroupEnabled;
             asset.onceGroupEnabled = onceGroupEnabled;

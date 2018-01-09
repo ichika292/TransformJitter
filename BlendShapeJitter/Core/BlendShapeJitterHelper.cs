@@ -59,16 +59,51 @@ namespace MYB.Jitter
                 SetNextParameter();
             }
 
-            public void SetNextParameter()
+            public State SetNextParameter()
+            {
+                SetNextPeriod();
+                SetNextAmplitude();
+                return this;
+            }
+
+            public void SetNextParameter(State state, bool syncPeriod, bool syncAmplitude)
+            {
+                timer = 0f;
+                if (syncPeriod)
+                {
+                    curPeriod = state.curPeriod;
+                    nextPeriod = state.nextPeriod;
+                    curInterval = state.curInterval;
+                }
+                else
+                {
+                    SetNextPeriod();
+                }
+
+                if (syncAmplitude)
+                {
+                    curAmplitude = state.curAmplitude;
+                    nextAmplitude = state.nextAmplitude;
+                    curOffset = state.curOffset;
+                    nextOffset = state.nextOffset;
+                }
+                else
+                {
+                    SetNextAmplitude();
+                }
+            }
+
+            void SetNextPeriod()
             {
                 curPeriod = nextPeriod;
                 nextPeriod = param.period.Random();
-
                 curInterval = param.interval.Random();
+            }
 
+            void SetNextAmplitude()
+            {
                 curAmplitude = nextAmplitude;
                 nextAmplitude = param.amplitude.Random();
-
                 curOffset = nextOffset;
                 nextOffset = param.offset.Random();
             }
@@ -81,9 +116,10 @@ namespace MYB.Jitter
                 curOffset = param.offset.Random();
             }
             
-            public void UpdateLoop()
+            public State UpdateLoop()
             {
                 isProcessing = true;
+                State state = null;
 
                 if (timer < 1f)
                 {
@@ -96,8 +132,9 @@ namespace MYB.Jitter
                 else
                 {
                     timer = 0f;
-                    SetNextParameter();
+                    state = SetNextParameter();
                 }
+                return state;
             }
 
             public void UpdateOnce(System.Action callback)
