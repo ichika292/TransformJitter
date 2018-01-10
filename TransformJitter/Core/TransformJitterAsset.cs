@@ -44,14 +44,12 @@ namespace MYB.Jitter
                 lp.syncEasing = op.syncEasing = syncEasing;
             }
 
-            if (syncPeriod && syncAmplitude)
+            for (int i = 1; i < 3; i++)
             {
-                for (int i = 1; i < 3; i++)
-                {
-                    loopParameter[i].CopyFrom(loopParameter[0]);
-                    onceParameter[i].CopyFrom(onceParameter[0]);
-                }
+                loopParameter[i].CopyFrom(loopParameter[0], syncPeriod, syncAmplitude, syncEasing);
+                onceParameter[i].CopyFrom(onceParameter[0], syncPeriod, syncAmplitude, syncEasing);
             }
+
 
             foreach (JitterParameter param in loopParameter)
                 param.AdjustParameter();

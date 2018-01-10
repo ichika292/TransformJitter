@@ -77,13 +77,10 @@ namespace MYB.Jitter
                 lp.syncEasing = op.syncEasing = syncEasing;
             }
 
-            if (syncPeriod && syncAmplitude)
+            for (int i = 1; i < 3; i++)
             {
-                for (int i = 1; i < 3; i++)
-                {
-                    loopParameter[i].CopyFrom(loopParameter[0]);
-                    onceParameter[i].CopyFrom(onceParameter[0]);
-                }
+                loopParameter[i].CopyFrom(loopParameter[0], syncPeriod, syncAmplitude, syncEasing);
+                onceParameter[i].CopyFrom(onceParameter[0], syncPeriod, syncAmplitude, syncEasing);
             }
 
             foreach (JitterParameter param in loopParameter)
@@ -265,9 +262,9 @@ namespace MYB.Jitter
 
             for (int i = 0; i < 3; i++)
             {
-                loopParameter[i].CopyFrom(asset.loopParameter[i], true);
+                loopParameter[i].CopyFrom(asset.loopParameter[i], true, true, true, true);
                 loopParameter[i].AdjustParameter();
-                onceParameter[i].CopyFrom(asset.onceParameter[i], true);
+                onceParameter[i].CopyFrom(asset.onceParameter[i], true, true, true, true);
                 onceParameter[i].AdjustParameter();
                 loopEnabled[i] = asset.loopEnabled[i];
                 onceEnabled[i] = asset.onceEnabled[i];
@@ -297,8 +294,8 @@ namespace MYB.Jitter
 
             for (int i = 0; i < 3; i++)
             {
-                asset.loopParameter[i].CopyFrom(loopParameter[i], true);
-                asset.onceParameter[i].CopyFrom(onceParameter[i], true);
+                asset.loopParameter[i].CopyFrom(loopParameter[i], true, true, true, true);
+                asset.onceParameter[i].CopyFrom(onceParameter[i], true, true, true, true);
                 asset.loopEnabled[i] = loopEnabled[i];
                 asset.onceEnabled[i] = onceEnabled[i];
             }
