@@ -12,7 +12,7 @@ namespace MYB.Jitter
         public bool playOnAwake = true;
         public bool syncPeriod;
         public bool syncAmplitude;
-        public bool syncEasing;
+        public bool syncEasing = true;
         public bool overrideOnce;
         public float magnification;
         public List<JitterHelper> helperList = new List<JitterHelper>();
@@ -38,7 +38,7 @@ namespace MYB.Jitter
         //Editor用
         public string[] axisLabel = { "--- X ---", "--- Y ---", "--- Z ---" };
         public bool loopGroupEnabled = true;
-        public bool onceGroupEnabled = true;
+        public bool onceGroupEnabled = false;
         public bool[] loopEnabled = { true, true, true };
         public bool[] onceEnabled = { true, true, true };
 
