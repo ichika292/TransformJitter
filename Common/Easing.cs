@@ -43,6 +43,8 @@ namespace MYB.Jitter
             float f = 0f;
             switch (ease)
             {
+                case Easing.None:
+                    break;
                 case Easing.Linear:
                     f = t;
                     break;
