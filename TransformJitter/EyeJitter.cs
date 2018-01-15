@@ -35,7 +35,7 @@ namespace MYB.Jitter
 
             if (timer < 0f)
             {
-                timer = interval.Random();
+                timer = interval.RandomInside();
                 var vec = Vector3.zero;
                 vec.x = Random.Range(-range.y, range.y);
                 vec.y = Random.Range(-range.x, range.x);

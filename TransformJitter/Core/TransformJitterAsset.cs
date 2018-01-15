@@ -49,8 +49,7 @@ namespace MYB.Jitter
                 loopParameter[i].CopyFrom(loopParameter[0], syncPeriod, syncAmplitude, syncEasing);
                 onceParameter[i].CopyFrom(onceParameter[0], syncPeriod, syncAmplitude, syncEasing);
             }
-
-
+            
             foreach (JitterParameter param in loopParameter)
                 param.AdjustParameter();
         }
@@ -98,9 +97,7 @@ namespace MYB.Jitter
                 loopParameterProperty = serializedObject.FindProperty("loopParameter");
                 onceParameterProperty = serializedObject.FindProperty("onceParameter");
             }
-
-            bool childrenFolding = true;
-
+            
             public override void OnInspectorGUI()
             {
                 var self = target as TransformJitterAsset;

@@ -81,7 +81,7 @@ namespace MYB.Jitter
         }
 
         //target変更時に親を探す
-        protected void SearchParent()
+        public void SearchParent()
         {
             isChild = false;
             

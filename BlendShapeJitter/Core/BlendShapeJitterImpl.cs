@@ -317,8 +317,9 @@ namespace MYB.Jitter
         public override void PlayLoop(float magnification) { }
         public override void PlayOnce() { }
         public override void PlayOnce(float magnification) { }
+        public override void MoveNext(float speed) { }
 
-        public void Import()
+        public override void Import()
         {
             if (asset == null)
             {
@@ -348,7 +349,7 @@ namespace MYB.Jitter
             SetDampMorphName();
         }
 
-        public void Export()
+        public override void Export()
         {
             if (asset == null)
             {

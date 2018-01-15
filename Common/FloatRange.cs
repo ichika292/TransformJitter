@@ -27,7 +27,17 @@ namespace MYB.Jitter
         /// <summary>
         /// return Random.Range(min, max)
         /// </summary>
-        public float Random() { return UnityEngine.Random.Range(min, max); }
+        public float RandomInside() { return Random.Range(min, max); }
+        public float RandomUpper() { return Random.Range(max, maxLimit); }
+        public float RandomLower() { return Random.Range(minLimit, min); }
+        public float RandomOutside()
+        {
+            var center = (max + min) / 2f;
+            var half = Range / 2f;
+            var res =  Random.Range(minLimit - min, maxLimit - max);
+            res += res >= 0f ? half : -half;
+            return res + center;
+        }
 
         /// <summary>
         /// MinMaxSlider with DelayedFloatField

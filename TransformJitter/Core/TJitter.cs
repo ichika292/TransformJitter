@@ -64,7 +64,7 @@ namespace MYB.Jitter
         }
 
         //Editor変更時
-        protected void OnValidate()
+        public void OnValidate()
         {
             for (int i = 0; i < 3; i++)
             {
@@ -241,7 +241,7 @@ namespace MYB.Jitter
             ResetValue();
         }
 
-        public void Import()
+        public override void Import()
         {
             if (asset == null)
             {
@@ -273,7 +273,7 @@ namespace MYB.Jitter
             OnValidate();
         }
 
-        public void Export()
+        public override void Export()
         {
             if (asset == null)
             {
@@ -315,5 +315,6 @@ namespace MYB.Jitter
         public override void PlayLoop(float magnification) { }
         public override void PlayOnce() { }
         public override void PlayOnce(float magnification) { }
+        public override void MoveNext(float speed = 0.1f) { }
     }
 }

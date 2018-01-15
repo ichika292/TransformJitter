@@ -57,8 +57,8 @@ namespace MYB.Jitter
             public State(BlendShapeJitterParameter _param)
             {
                 param = _param;
-                nextAmplitude = param.amplitude.Random();
-                nextOffset = param.offset.Random();
+                nextAmplitude = param.amplitude.RandomInside();
+                nextOffset = param.offset.RandomInside();
                 fastForward = 0f;
 
                 SetNextParameter();
@@ -103,24 +103,24 @@ namespace MYB.Jitter
             void SetNextPeriod()
             {
                 curPeriod = nextPeriod;
-                nextPeriod = param.period.Random();
-                curInterval = param.interval.Random();
+                nextPeriod = param.period.RandomInside();
+                curInterval = param.interval.RandomInside();
             }
 
             void SetNextAmplitude()
             {
                 curAmplitude = nextAmplitude;
-                nextAmplitude = param.amplitude.Random();
+                nextAmplitude = param.amplitude.RandomInside();
                 curOffset = nextOffset;
-                nextOffset = param.offset.Random();
+                nextOffset = param.offset.RandomInside();
             }
 
             public void SetOnceParameter()
             {
-                curPeriod = param.period.Random();
-                curInterval = param.interval.Random();
-                curAmplitude = param.amplitude.Random();
-                curOffset = param.offset.Random();
+                curPeriod = param.period.RandomInside();
+                curInterval = param.interval.RandomInside();
+                curAmplitude = param.amplitude.RandomInside();
+                curOffset = param.offset.RandomInside();
             }
             
             public State UpdateLoop()

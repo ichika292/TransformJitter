@@ -22,5 +22,8 @@ namespace MYB.Jitter
         public abstract void PlayOnce();
         public abstract void PlayOnce(float magnification);
         public abstract void StopLoop();
+        public abstract void MoveNext(float speed);
+        public abstract void Import();
+        public abstract void Export();
     }
 }

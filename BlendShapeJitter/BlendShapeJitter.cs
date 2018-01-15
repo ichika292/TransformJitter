@@ -84,7 +84,7 @@ namespace MYB.Jitter
         /// LOOP再生中、次の周期まで早送り
         /// </summary>
         /// <param name="speed">0で効果なし 1で即次周期へ</param>
-        public void MoveNext(float speed = 0.1f)
+        public override void MoveNext(float speed = 0.1f)
         {
             if (playState == PlayState.Stop) return;
 
