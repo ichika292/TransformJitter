@@ -18,8 +18,7 @@ namespace MYB.Jitter
 
             Initialize();
         }
-
-        #region ********** LOOP ***********    
+        
         /// <summary>
         /// ループ再生開始
         /// </summary>
@@ -62,9 +61,7 @@ namespace MYB.Jitter
             playState = PlayState.Fadeout;
             fadeSpeed = 1f / Mathf.Max(0.01f, second);
         }
-        #endregion
 
-        #region ********** ONCE ***********
         /// <summary>
         /// 1周再生
         /// </summary>
@@ -80,7 +77,18 @@ namespace MYB.Jitter
         {
             _PlayOnce(magnification);
         }
-        #endregion
+
+        /// <summary>
+        /// LOOP再生中、次の周期まで早送り
+        /// </summary>
+        /// <param name="speed">0で効果なし 1で即次周期へ</param>
+        public void MoveNext(float speed = 0.1f)
+        {
+            if (playState == PlayState.Stop) return;
+
+            foreach (JitterHelper h in helperList)
+                h.MoveNext(speed);
+        }
 
         #region Inspector拡張
 #if UNITY_EDITOR
@@ -246,15 +254,14 @@ namespace MYB.Jitter
                 //Button
                 EditorGUILayout.BeginHorizontal();
                 {
-                    GUILayout.FlexibleSpace();
-
                     EditorGUI.BeginDisabledGroup(!EditorApplication.isPlaying);
                     if (!self.isChild)
                     {
-                        if (GUILayout.Button("Fadein", GUILayout.Width(60))) self.FadeIn(3f);
-                        if (GUILayout.Button("Fadeout", GUILayout.Width(60))) self.FadeOut(3f);
+                        if (GUILayout.Button("Fadein")) self.FadeIn(3f);
+                        if (GUILayout.Button("Fadeout")) self.FadeOut(3f);
                     }
-                    if (GUILayout.Button("Play Once", GUILayout.Width(100))) self.PlayOnce();
+                    if (GUILayout.Button("Move Next")) self.MoveNext();
+                    if (GUILayout.Button("Play Once")) self.PlayOnce();
                     EditorGUI.EndDisabledGroup();
                 }
                 EditorGUILayout.EndHorizontal();

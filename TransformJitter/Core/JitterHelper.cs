@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System;
 
 namespace MYB.Jitter
 {
@@ -6,7 +7,7 @@ namespace MYB.Jitter
     /// LoopとOnceのStateを管理する。
     /// (syncAxis ? 1 : 3)個インスタンス化され、同数のコルーチンが走る。
     /// </summary>
-    [System.Serializable]
+    [Serializable]
     public class JitterHelper
     {
         /// <summary>
@@ -14,47 +15,52 @@ namespace MYB.Jitter
         /// </summary>
         public class State
         {
-            [System.NonSerialized]
+            [NonSerialized]
             public JitterParameter param;
 
-            [System.NonSerialized]
+            [NonSerialized]
             public bool isProcessing;
 
-            [System.NonSerialized]
+            [NonSerialized]
             public float timer;         //周期毎にリセットするカウンタ
 
-            [System.NonSerialized]
+            [NonSerialized]
             public float curPeriod;     //周期(秒)
 
-            [System.NonSerialized]
+            [NonSerialized]
             public float nextPeriod;
 
-            [System.NonSerialized]
+            [NonSerialized]
             public float curInterval;   //次周期までの待ち時間(秒)
 
-            [System.NonSerialized]
+            [NonSerialized]
             public float curAmplitude;  //angleWeight振幅
 
-            [System.NonSerialized]
+            [NonSerialized]
             public float nextAmplitude;
 
-            [System.NonSerialized]
+            [NonSerialized]
             public float curOffset;     //angleWeight下限
 
-            [System.NonSerialized]
+            [NonSerialized]
             public float nextOffset;
+
+            [NonSerialized]
+            public float fastForward;
 
             public State(JitterParameter _param)
             {
                 param = _param;
                 nextAmplitude = param.amplitude.Random();
                 nextOffset = param.offset.Random();
+                fastForward = 0f;
 
                 SetNextParameter();
             }
 
             public State SetNextParameter()
             {
+                fastForward = 0f;
                 SetNextPeriod();
                 SetNextAmplitude();
                 return this;
@@ -63,6 +69,7 @@ namespace MYB.Jitter
             public void SetNextParameter(State state, bool syncPeriod, bool syncAmplitude)
             {
                 timer = 0f;
+                fastForward = 0f;
                 if (syncPeriod)
                 {
                     curPeriod = state.curPeriod;
@@ -152,10 +159,12 @@ namespace MYB.Jitter
                 if (timer < 1f)
                 {
                     timer += Time.deltaTime / GetCurrentPeriod(easePeriod);
+                    timer += (1f - timer) * fastForward;
                 }
                 else if (timer < 1f + curInterval)
                 {
                     timer += Time.deltaTime;
+                    timer += (1f + curInterval - timer) * fastForward;
                 }
                 else
                 {
@@ -165,7 +174,7 @@ namespace MYB.Jitter
                 return nextState;
             }
 
-            public void UpdateOnce(System.Action callback)
+            public void UpdateOnce(Action callback)
             {
                 if (timer < 1f)
                 {
@@ -184,10 +193,10 @@ namespace MYB.Jitter
             }
         }
 
-        [System.NonSerialized]
+        [NonSerialized]
         public State loopState;
 
-        [System.NonSerialized]
+        [NonSerialized]
         public State onceState;
 
         public bool isProcessing { get { return loopState.isProcessing || onceState.isProcessing; } }
@@ -212,6 +221,11 @@ namespace MYB.Jitter
         public void ResetOnceState()
         {
             onceState.Reset();
+        }
+
+        public void MoveNext(float speed)
+        {
+            loopState.fastForward = speed;
         }
         
         public float GetCurrentLoopWeight(AnimationCurve loopCurve, JitterParameter _param)

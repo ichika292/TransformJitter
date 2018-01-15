@@ -20,8 +20,7 @@ namespace MYB.Jitter
 
             Initialize();
         }
-
-        #region ********** LOOP ***********    
+  
         /// <summary>
         /// ループ再生開始
         /// </summary>
@@ -65,9 +64,6 @@ namespace MYB.Jitter
             fadeSpeed = 1f / Mathf.Max(0.01f, second);
         }
 
-        #endregion
-
-        #region ********** ONCE ***********
         /// <summary>
         /// 1周再生
         /// </summary>
@@ -84,8 +80,17 @@ namespace MYB.Jitter
             _PlayOnce(Mathf.Max(0f, magnification));
         }
 
-        #endregion
+        /// <summary>
+        /// LOOP再生中、次の周期まで早送り
+        /// </summary>
+        /// <param name="speed">0で効果なし 1で即次周期へ</param>
+        public void MoveNext(float speed = 0.1f)
+        {
+            if (playState == PlayState.Stop) return;
 
+            foreach (BlendShapeJitterHelper h in helperList)
+                h.MoveNext(speed);
+        }
 
         #region Inspector拡張
 #if UNITY_EDITOR
@@ -239,21 +244,24 @@ namespace MYB.Jitter
 
                 //Exclusive List
                 damperReorderableList.DoLayoutList();
-
+                
                 //Button
                 EditorGUILayout.BeginHorizontal();
                 {
                     EditorGUI.BeginDisabledGroup(EditorApplication.isPlaying);
-                    if (GUILayout.Button("Get Main", GUILayout.Width(80))) self.GetMainMorph();
-                    if (GUILayout.Button("Get Damper", GUILayout.Width(80))) self.GetDampMorph();
+                    if (GUILayout.Button("Get Main")) self.GetMainMorph();
+                    if (GUILayout.Button("Get Damper")) self.GetDampMorph();
                     EditorGUI.EndDisabledGroup();
+                }
+                EditorGUILayout.EndHorizontal();
 
-                    GUILayout.FlexibleSpace();
-
+                EditorGUILayout.BeginHorizontal();
+                {  
                     EditorGUI.BeginDisabledGroup(!EditorApplication.isPlaying);
-                    if (GUILayout.Button("Fadein", GUILayout.Width(60))) self.FadeIn(3f);
-                    if (GUILayout.Button("Fadeout", GUILayout.Width(60))) self.FadeOut(3f);
-                    if (GUILayout.Button("Play Once", GUILayout.Width(80))) self.PlayOnce();
+                    if (GUILayout.Button("Fadein")) self.FadeIn(3f);
+                    if (GUILayout.Button("Fadeout")) self.FadeOut(3f);
+                    if (GUILayout.Button("Move Next")) self.MoveNext();
+                    if (GUILayout.Button("Play Once")) self.PlayOnce();
                     EditorGUI.EndDisabledGroup();
                 }
                 EditorGUILayout.EndHorizontal();
@@ -265,8 +273,8 @@ namespace MYB.Jitter
                     self.asset = (BlendShapeJitterAsset)EditorGUILayout.ObjectField(self.asset, typeof(BlendShapeJitterAsset), false);
 
                     EditorGUI.BeginDisabledGroup(EditorApplication.isPlaying);
-                    if (GUILayout.Button("Import", GUILayout.Width(60))) self.Import();
-                    if (GUILayout.Button("Export", GUILayout.Width(60))) self.Export();
+                    if (GUILayout.Button("Import", GUILayout.Width(50))) self.Import();
+                    if (GUILayout.Button("Export", GUILayout.Width(50))) self.Export();
                     EditorGUI.EndDisabledGroup();
 
                 }

@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -9,7 +10,7 @@ namespace MYB.Jitter
     /// LoopとOnceのStateを管理する。
     /// ReorderableListで設定されたMorphと同数がインスタンス化され、同数のコルーチンが走る。
     /// </summary>
-    [System.Serializable]
+    [Serializable]
     public class BlendShapeJitterHelper
     {
         /// <summary>
@@ -17,50 +18,55 @@ namespace MYB.Jitter
         /// </summary>
         public class State
         {
-            [System.NonSerialized]
+            [NonSerialized]
             public BlendShapeJitterParameter param;
 
-            [System.NonSerialized]
+            [NonSerialized]
             public bool isProcessing;
 
-            [System.NonSerialized]
+            [NonSerialized]
             public float timer;         //周期毎にリセットするカウンタ
 
-            [System.NonSerialized]
+            [NonSerialized]
             public float curPeriod;     //周期(秒)
 
-            [System.NonSerialized]
+            [NonSerialized]
             public float nextPeriod;
 
-            [System.NonSerialized]
+            [NonSerialized]
             public float curInterval;   //次周期までの待ち時間(秒)
 
-            [System.NonSerialized]
+            [NonSerialized]
             public float curAmplitude;  //morphWeight振幅
 
-            [System.NonSerialized]
+            [NonSerialized]
             public float nextAmplitude;
 
-            [System.NonSerialized]
+            [NonSerialized]
             public float curOffset;     //morphWeight下限
 
-            [System.NonSerialized]
+            [NonSerialized]
             public float nextOffset;
 
-            [System.NonSerialized]
+            [NonSerialized]
             public int currentKeyframeIndex;    //AnimationCurveの現在再生中の(Timerに対応する)Keyframeのindex
+
+            [NonSerialized]
+            public float fastForward;
 
             public State(BlendShapeJitterParameter _param)
             {
                 param = _param;
                 nextAmplitude = param.amplitude.Random();
                 nextOffset = param.offset.Random();
+                fastForward = 0f;
 
                 SetNextParameter();
             }
 
             public State SetNextParameter()
             {
+                fastForward = 0f;
                 SetNextPeriod();
                 SetNextAmplitude();
                 return this;
@@ -69,6 +75,7 @@ namespace MYB.Jitter
             public void SetNextParameter(State state, bool syncPeriod, bool syncAmplitude)
             {
                 timer = 0f;
+                fastForward = 0f;
                 if (syncPeriod)
                 {
                     curPeriod = state.curPeriod;
@@ -124,10 +131,12 @@ namespace MYB.Jitter
                 if (timer < 1f)
                 {
                     timer += Time.deltaTime / GetCurrentPeriod();
+                    timer += (1f - timer) * fastForward;
                 }
                 else if (timer < 1f + curInterval)
                 {
                     timer += Time.deltaTime;
+                    timer += (1f + curInterval - timer) * fastForward;
                 }
                 else
                 {
@@ -137,7 +146,7 @@ namespace MYB.Jitter
                 return nextState;
             }
 
-            public void UpdateOnce(System.Action callback)
+            public void UpdateOnce(Action callback)
             {
                 if (timer < 1f)
                 {
@@ -254,6 +263,11 @@ namespace MYB.Jitter
         public void ResetOnceState()
         {
             onceState.Reset();
+        }
+
+        public void MoveNext(float speed)
+        {
+            loopState.fastForward = speed;
         }
 
         /// <summary>
